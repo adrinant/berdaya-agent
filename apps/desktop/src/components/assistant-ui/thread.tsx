@@ -79,7 +79,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { Loader } from '@/components/ui/loader'
-import type { Berdaya AgentGateway } from '@/hermes'
+import type { HermesGateway } from '@/hermes'
 import { useResizeObserver } from '@/hooks/use-resize-observer'
 import { useI18n } from '@/i18n'
 import { attachmentDisplayText, attachmentId, pathLabel } from '@/lib/chat-runtime'
@@ -131,7 +131,7 @@ function messageContentText(content: unknown): string {
 export const Thread: FC<{
   clampToComposer?: boolean
   cwd?: string | null
-  gateway?: Berdaya AgentGateway | null
+  gateway?: HermesGateway | null
   intro?: IntroProps
   loading?: ThreadLoadingState
   onBranchInNewChat?: (messageId: string) => void
@@ -975,7 +975,7 @@ const SystemMessage: FC = () => {
 
 interface UserEditComposerProps {
   cwd: string | null
-  gateway: Berdaya AgentGateway | null
+  gateway: HermesGateway | null
   sessionId: string | null
 }
 

@@ -50,7 +50,7 @@ export const zhHant = defineLocale({
       loadingSettings: '正在載入 Berdaya Agent 設定',
       loadingSessions: '正在載入最近工作階段',
       startingDesktopConnection: '正在啟動桌面連線',
-      startingBerdaya AgentDesktop: '正在啟動 Berdaya Agent Desktop…'
+      startingHermesDesktop: '正在啟動 Berdaya Agent Desktop…'
     },
     errors: {
       backgroundExited: 'Berdaya Agent 背景程序已結束。',
@@ -96,7 +96,7 @@ export const zhHant = defineLocale({
     copyDetailFailed: '無法複製通知詳情',
     backendOutOfDateTitle: '後端版本過舊',
     backendOutOfDateMessage: '您的 Berdaya Agent 後端早於目前的桌面版本，可能無法正常運作。請更新以保持一致。',
-    updateBerdaya Agent: '更新 Berdaya Agent',
+    updateHermes: '更新 Berdaya Agent',
     updateReadyTitle: '有可用更新',
     updateReadyMessage: count => `有 ${count} 項新變更可用。`,
     seeWhatsNew: '查看新增內容',
@@ -800,7 +800,7 @@ export const zhHant = defineLocale({
     gatewayStopped: '訊息閘道已停止',
     hermesActiveSessions: (version, count) => `Berdaya Agent ${version} · 活躍工作階段 ${count}`,
     restartMessaging: '重新啟動訊息服務',
-    updateBerdaya Agent: '更新 Berdaya Agent',
+    updateHermes: '更新 Berdaya Agent',
     actionRunning: '執行中',
     actionDone: '完成',
     actionFailed: '失敗',

@@ -12,7 +12,7 @@ import {
   getStatus,
   getUsageAnalytics,
   restartGateway,
-  updateBerdaya Agent
+  updateHermes
 } from '@/hermes'
 import type { ActionStatusResponse, AnalyticsResponse, StatusResponse } from '@/hermes'
 import { useI18n } from '@/i18n'
@@ -228,7 +228,7 @@ export function CommandCenterView({ initialSection, onClose, onDeleteSession, on
       setSystemError('')
 
       try {
-        const started = kind === 'restart' ? await restartGateway() : await updateBerdaya Agent()
+        const started = kind === 'restart' ? await restartGateway() : await updateHermes()
         let nextStatus: ActionStatusResponse | null = null
 
         for (let attempt = 0; attempt < 18; attempt += 1) {
@@ -398,7 +398,7 @@ export function CommandCenterView({ initialSection, onClose, onDeleteSession, on
                           {cc.restartMessaging}
                         </Button>
                         <Button onClick={() => void runSystemAction('update')} size="xs" variant="textStrong">
-                          {cc.updateBerdaya Agent}
+                          {cc.updateHermes}
                         </Button>
                       </div>
                     </div>

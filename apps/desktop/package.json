@@ -129,7 +129,7 @@
   },
   "build": {
     "electronVersion": "40.9.3",
-    "appId": "com.nousresearch.hermes",
+    "appId": "com.berdayaai.agent",
     "productName": "Berdaya Agent",
     "executableName": "Berdaya Agent",
     "artifactName": "Berdaya-${version}-${os}-${arch}.${ext}",
@@ -218,7 +218,7 @@
     },
     "linux": {
       "category": "Development",
-      "maintainer": "Nous Research <support@nousresearch.com>",
+      "maintainer": "Berdaya AI",
       "synopsis": "Native desktop shell for Berdaya Agent.",
       "target": [
         "AppImage",

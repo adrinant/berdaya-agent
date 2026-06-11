@@ -50,7 +50,7 @@ export const en: Translations = {
       loadingSettings: 'Loading Berdaya Agent settings',
       loadingSessions: 'Loading recent sessions',
       startingDesktopConnection: 'Starting desktop connection',
-      startingBerdaya AgentDesktop: 'Starting Berdaya Agent Desktop…'
+      startingHermesDesktop: 'Starting Berdaya Agent Desktop…'
     },
     errors: {
       backgroundExited: 'Berdaya Agent background process exited.',
@@ -99,7 +99,7 @@ export const en: Translations = {
     backendOutOfDateTitle: 'Backend out of date',
     backendOutOfDateMessage:
       'Your Berdaya Agent backend is older than this desktop build and may not work correctly. Update to align them.',
-    updateBerdaya Agent: 'Update Berdaya Agent',
+    updateHermes: 'Update Berdaya Agent',
     updateReadyTitle: 'Update ready',
     updateReadyMessage: count => `${count} new change${count === 1 ? '' : 's'} available.`,
     seeWhatsNew: "See what's new",
@@ -692,7 +692,7 @@ export const en: Translations = {
     gatewayStopped: 'Messaging gateway stopped',
     hermesActiveSessions: (version, count) => `Berdaya Agent ${version} · Active sessions ${count}`,
     restartMessaging: 'Restart messaging',
-    updateBerdaya Agent: 'Update Berdaya Agent',
+    updateHermes: 'Update Berdaya Agent',
     actionRunning: 'running',
     actionDone: 'done',
     actionFailed: 'failed',

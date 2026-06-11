@@ -2,7 +2,7 @@ import { IconDownload, IconRefresh, IconUpload } from '@tabler/icons-react'
 import { useRef } from 'react'
 
 import { Tip } from '@/components/ui/tooltip'
-import { getBerdaya AgentConfigDefaults, getBerdaya AgentConfigRecord, saveBerdaya AgentConfig } from '@/hermes'
+import { getHermesConfigDefaults, getHermesConfigRecord, saveHermesConfig } from '@/hermes'
 import { useI18n } from '@/i18n'
 import { triggerHaptic } from '@/lib/haptics'
 import { Archive, Globe, Info, KeyRound, Settings2, Sparkles, Wrench, Zap } from '@/lib/icons'
@@ -56,7 +56,7 @@ export function SettingsView({ gateway, onClose, onConfigSaved, onMainModelChang
 
   const exportConfig = async () => {
     try {
-      const cfg = await getBerdaya AgentConfigRecord()
+      const cfg = await getHermesConfigRecord()
       const blob = new Blob([JSON.stringify(cfg, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -76,7 +76,7 @@ export function SettingsView({ gateway, onClose, onConfigSaved, onMainModelChang
     }
 
     try {
-      await saveBerdaya AgentConfig(await getBerdaya AgentConfigDefaults())
+      await saveHermesConfig(await getHermesConfigDefaults())
       triggerHaptic('success')
       onConfigSaved?.()
     } catch (err) {

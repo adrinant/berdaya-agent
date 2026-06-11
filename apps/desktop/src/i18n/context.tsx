@@ -1,6 +1,6 @@
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 
-import { getBerdaya AgentConfigRecord, type Berdaya AgentConfigRecord, saveBerdaya AgentConfig } from '@/hermes'
+import { getHermesConfigRecord, type HermesConfigRecord, saveHermesConfig } from '@/hermes'
 
 import { TRANSLATIONS } from './catalog'
 import { DEFAULT_LOCALE, localeConfigValue, normalizeLocale } from './languages'
@@ -10,8 +10,8 @@ import type { Locale, Translations } from './types'
 export { LOCALE_META } from './languages'
 
 export interface I18nConfigClient {
-  getConfig: () => Promise<Berdaya AgentConfigRecord>
-  saveConfig: (config: Berdaya AgentConfigRecord) => Promise<{ ok: boolean }>
+  getConfig: () => Promise<HermesConfigRecord>
+  saveConfig: (config: HermesConfigRecord) => Promise<{ ok: boolean }>
 }
 
 const defaultConfigClient: I18nConfigClient = {
@@ -20,14 +20,14 @@ const defaultConfigClient: I18nConfigClient = {
       return Promise.resolve({})
     }
 
-    return getBerdaya AgentConfigRecord()
+    return getHermesConfigRecord()
   },
   saveConfig: config => {
     if (typeof window === 'undefined' || !window.hermesDesktop?.api) {
       return Promise.resolve({ ok: true })
     }
 
-    return saveBerdaya AgentConfig(config)
+    return saveHermesConfig(config)
   }
 }
 
@@ -35,11 +35,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-export function getConfigDisplayLanguage(config: Berdaya AgentConfigRecord): unknown {
+export function getConfigDisplayLanguage(config: HermesConfigRecord): unknown {
   return isRecord(config.display) ? config.display.language : undefined
 }
 
-export function withConfigDisplayLanguage(config: Berdaya AgentConfigRecord, locale: Locale): Berdaya AgentConfigRecord {
+export function withConfigDisplayLanguage(config: HermesConfigRecord, locale: Locale): HermesConfigRecord {
   const display = isRecord(config.display) ? config.display : {}
 
   return {

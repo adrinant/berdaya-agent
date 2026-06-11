@@ -1,6 +1,6 @@
 import { type MutableRefObject, useCallback, useState } from 'react'
 
-import { getBerdaya AgentConfig, getBerdaya AgentConfigDefaults } from '@/hermes'
+import { getHermesConfig, getHermesConfigDefaults } from '@/hermes'
 import { BUILTIN_PERSONALITIES, normalizePersonalityValue, personalityNamesFromConfig } from '@/lib/chat-runtime'
 import {
   $currentCwd,
@@ -20,18 +20,18 @@ function recordingLimit(value: unknown) {
   return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : DEFAULT_VOICE_SECONDS
 }
 
-interface Berdaya AgentConfigOptions {
+interface HermesConfigOptions {
   activeSessionIdRef: MutableRefObject<string | null>
   refreshProjectBranch: (cwd: string) => Promise<void>
 }
 
-export function useBerdaya AgentConfig({ activeSessionIdRef, refreshProjectBranch }: Berdaya AgentConfigOptions) {
+export function useHermesConfig({ activeSessionIdRef, refreshProjectBranch }: HermesConfigOptions) {
   const [voiceMaxRecordingSeconds, setVoiceMaxRecordingSeconds] = useState(DEFAULT_VOICE_SECONDS)
   const [sttEnabled, setSttEnabled] = useState(true)
 
-  const refreshBerdaya AgentConfig = useCallback(async () => {
+  const refreshHermesConfig = useCallback(async () => {
     try {
-      const [config, defaults] = await Promise.all([getBerdaya AgentConfig(), getBerdaya AgentConfigDefaults().catch(() => ({}))])
+      const [config, defaults] = await Promise.all([getHermesConfig(), getHermesConfigDefaults().catch(() => ({}))])
 
       const personality = normalizePersonalityValue(
         typeof config.display?.personality === 'string' ? config.display.personality : ''
@@ -70,5 +70,5 @@ export function useBerdaya AgentConfig({ activeSessionIdRef, refreshProjectBranc
     }
   }, [activeSessionIdRef, refreshProjectBranch])
 
-  return { refreshBerdaya AgentConfig, sttEnabled, voiceMaxRecordingSeconds }
+  return { refreshHermesConfig, sttEnabled, voiceMaxRecordingSeconds }
 }

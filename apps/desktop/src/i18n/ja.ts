@@ -50,7 +50,7 @@ export const ja = defineLocale({
       loadingSettings: 'Berdaya Agent の設定を読み込み中',
       loadingSessions: '最近のセッションを読み込み中',
       startingDesktopConnection: 'デスクトップ接続を開始中',
-      startingBerdaya AgentDesktop: 'Berdaya Agent Desktop を起動中…'
+      startingHermesDesktop: 'Berdaya Agent Desktop を起動中…'
     },
     errors: {
       backgroundExited: 'Berdaya Agent バックグラウンドプロセスが終了しました。',
@@ -100,7 +100,7 @@ export const ja = defineLocale({
     backendOutOfDateTitle: 'バックエンドが古いです',
     backendOutOfDateMessage:
       'Berdaya Agent バックエンドがこのデスクトップビルドより古く、正常に動作しない場合があります。更新して揃えてください。',
-    updateBerdaya Agent: 'Berdaya Agent を更新',
+    updateHermes: 'Berdaya Agent を更新',
     updateReadyTitle: '更新の準備ができました',
     updateReadyMessage: count => `${count} 件の新しい変更が利用可能です。`,
     seeWhatsNew: '新機能を見る',
@@ -817,7 +817,7 @@ export const ja = defineLocale({
     gatewayStopped: 'メッセージングゲートウェイが停止中',
     hermesActiveSessions: (version, count) => `Berdaya Agent ${version} · アクティブセッション ${count}`,
     restartMessaging: 'メッセージングを再起動',
-    updateBerdaya Agent: 'Berdaya Agent を更新',
+    updateHermes: 'Berdaya Agent を更新',
     actionRunning: '実行中',
     actionDone: '完了',
     actionFailed: '失敗',

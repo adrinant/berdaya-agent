@@ -1,4 +1,4 @@
-import type { Berdaya AgentConfigRecord, ToolsetInfo } from '@/types/hermes'
+import type { HermesConfigRecord, ToolsetInfo } from '@/types/hermes'
 
 import { BUILTIN_PERSONALITIES, ENUM_OPTIONS, PROVIDER_GROUPS } from './constants'
 
@@ -80,7 +80,7 @@ function safeSet(target: Record<string, unknown>, key: string, value: unknown): 
   })
 }
 
-export function getNested(obj: Berdaya AgentConfigRecord, path: string): unknown {
+export function getNested(obj: HermesConfigRecord, path: string): unknown {
   let cur: unknown = obj
 
   for (const part of configPathParts(path)) {
@@ -98,7 +98,7 @@ export function getNested(obj: Berdaya AgentConfigRecord, path: string): unknown
   return cur
 }
 
-export function setNested(obj: Berdaya AgentConfigRecord, path: string, value: unknown): Berdaya AgentConfigRecord {
+export function setNested(obj: HermesConfigRecord, path: string, value: unknown): HermesConfigRecord {
   const clone = structuredClone(obj)
   const parts = configPathParts(path)
   let cur: Record<string, unknown> = clone
@@ -124,7 +124,7 @@ export function setNested(obj: Berdaya AgentConfigRecord, path: string, value: u
   return clone
 }
 
-function personalityOptions(config: Berdaya AgentConfigRecord): string[] {
+function personalityOptions(config: HermesConfigRecord): string[] {
   const custom = getNested(config, 'agent.personalities')
 
   const customNames =
@@ -136,7 +136,7 @@ function personalityOptions(config: Berdaya AgentConfigRecord): string[] {
 export function enumOptionsFor(
   key: string,
   value: unknown,
-  config: Berdaya AgentConfigRecord,
+  config: HermesConfigRecord,
   dynamicOptions?: string[]
 ): string[] | undefined {
   const opts = dynamicOptions ?? (key === 'display.personality' ? personalityOptions(config) : ENUM_OPTIONS[key])

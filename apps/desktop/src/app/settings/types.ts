@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react'
 
-import type { Berdaya AgentGateway } from '@/hermes'
+import type { HermesGateway } from '@/hermes'
 import type { IconComponent } from '@/lib/icons'
 import type { EnvVarInfo } from '@/types/hermes'
 
@@ -8,7 +8,7 @@ export type SettingsView = 'about' | 'gateway' | 'keys' | 'mcp' | 'providers' | 
 export type EnvPatch = Partial<Pick<EnvVarInfo, 'is_set' | 'redacted_value'>>
 
 export interface SettingsPageProps {
-  gateway?: Berdaya AgentGateway | null
+  gateway?: HermesGateway | null
   onClose: () => void
   onConfigSaved?: () => void
   onMainModelChanged?: (provider: string, model: string) => void

@@ -27,7 +27,7 @@ const { execFileSync, spawn } = require('node:child_process')
 const { detectRemoteDisplay, isWindowsBinaryPathInWsl, isWslEnvironment } = require('./bootstrap-platform.cjs')
 const { runBootstrap } = require('./bootstrap-runner.cjs')
 const { buildSessionWindowUrl, createSessionWindowRegistry } = require('./session-windows.cjs')
-const { canImportBerdaya AgentCli, verifyBerdaya AgentCli } = require('./backend-probes.cjs')
+const { canImportHermesCli, verifyHermesCli } = require('./backend-probes.cjs')
 const { probeGatewayWebSocket } = require('./gateway-ws-probe.cjs')
 const { serializeJsonBody, setJsonRequestHeaders } = require('./oauth-net-request.cjs')
 const { fetchMarketplaceThemes, searchMarketplaceThemes } = require('./vscode-marketplace.cjs')
@@ -234,7 +234,7 @@ if (INSTALL_STAMP) {
 // HERMES_DESKTOP_USER_DATA_DIR (used by test:desktop:fresh) puts the sandbox
 // HERMES_HOME beneath the throwaway userData dir so a fresh-install run never
 // touches the user's real ~/.hermes / %LOCALAPPDATA%\hermes.
-function resolveBerdayaHome() {
+function resolveHermesHome() {
   if (process.env.HERMES_HOME) return path.resolve(process.env.HERMES_HOME)
   if (USER_DATA_OVERRIDE) return path.join(path.resolve(USER_DATA_OVERRIDE), 'hermes-home')
   if (IS_WINDOWS && process.env.LOCALAPPDATA) {
@@ -248,7 +248,7 @@ function resolveBerdayaHome() {
   return path.join(app.getPath('home'), '.hermes')
 }
 
-const HERMES_HOME = resolveBerdayaHome()
+const HERMES_HOME = resolveHermesHome()
 // ACTIVE_HERMES_ROOT — the canonical mutable Berdaya Agent install. Same path
 // install.ps1 / install.sh use, so a desktop-only user and a CLI-only user end
 // up with identical layouts and can share one install.
@@ -259,7 +259,7 @@ const VENV_ROOT = path.join(ACTIVE_HERMES_ROOT, 'venv')
 // (Phase 1D) after install.ps1 has completed all stages and the user has
 // finished initial configuration. Presence of this marker means the install
 // is in a known-good state and we can skip the bootstrap flow on subsequent
-// boots, going straight to `resolveBerdaya AgentBackend()`. Missing or stale marker
+// boots, going straight to `resolveHermesBackend()`. Missing or stale marker
 // means we re-run the bootstrap; install.ps1's stages are idempotent so a
 // re-run on an already-good install just discovers everything in place.
 //
@@ -477,7 +477,7 @@ app.setName(APP_NAME)
 // the seed here just covers the first open and any non-menu invocation path.
 app.setAboutPanelOptions({
   applicationName: APP_NAME,
-  applicationVersion: resolveBerdaya AgentVersion(),
+  applicationVersion: resolveHermesVersion(),
   copyright: 'Copyright © 2026 Nous Research'
 })
 
@@ -1040,7 +1040,7 @@ function looksLikeDesktopAppBinary(commandPath) {
   )
 }
 
-function isBerdaya AgentSourceRoot(root) {
+function isHermesSourceRoot(root) {
   return directoryExists(root) && fileExists(path.join(root, 'hermes_cli', 'main.py'))
 }
 
@@ -1250,7 +1250,7 @@ function resolveGitBinary() {
   return _gitBinaryCache
 }
 
-function recentBerdaya AgentLog() {
+function recentHermesLog() {
   return hermesLog.slice(-20).join('\n')
 }
 
@@ -1285,8 +1285,8 @@ function writeDesktopUpdateConfig(config) {
 function resolveUpdateRoot() {
   const candidates = [
     process.env.HERMES_DESKTOP_HERMES_ROOT && path.resolve(process.env.HERMES_DESKTOP_HERMES_ROOT),
-    !IS_PACKAGED && isBerdaya AgentSourceRoot(SOURCE_REPO_ROOT) ? SOURCE_REPO_ROOT : null,
-    isBerdaya AgentSourceRoot(ACTIVE_HERMES_ROOT) ? ACTIVE_HERMES_ROOT : null
+    !IS_PACKAGED && isHermesSourceRoot(SOURCE_REPO_ROOT) ? SOURCE_REPO_ROOT : null,
+    isHermesSourceRoot(ACTIVE_HERMES_ROOT) ? ACTIVE_HERMES_ROOT : null
   ].filter(Boolean)
 
   return candidates.find(c => directoryExists(path.join(c, '.git'))) || candidates[0] || ACTIVE_HERMES_ROOT
@@ -1506,7 +1506,7 @@ function repairMacUpdaterHelper(updater) {
 // Path to the venv shim whose lock decides whether `hermes update` can write
 // fresh entry points. On Windows this is the file the running backend
 // `hermes.exe` holds open; on POSIX it's never mandatory-locked.
-function venvBerdaya AgentShimPath(updateRoot) {
+function venvHermesShimPath(updateRoot) {
   return IS_WINDOWS
     ? path.join(updateRoot, 'venv', 'Scripts', 'hermes.exe')
     : path.join(updateRoot, 'venv', 'bin', 'hermes')
@@ -1607,7 +1607,7 @@ async function releaseBackendLock(updateRoot, tag) {
   stopAllPoolBackends()
   for (const pid of pids) forceKillProcessTree(pid)
 
-  const shim = venvBerdaya AgentShimPath(updateRoot)
+  const shim = venvHermesShimPath(updateRoot)
   const deadlineMs = Date.now() + 15000
   while (Date.now() < deadlineMs) {
     if (!isShimLocked(shim)) {
@@ -1724,7 +1724,7 @@ async function applyUpdates(opts = {}) {
 
 // Resolve the hermes CLI to drive an in-app update: prefer the venv shim in
 // the install we're updating, fall back to `hermes` on PATH.
-function resolveBerdaya AgentCliBinary(updateRoot) {
+function resolveHermesCliBinary(updateRoot) {
   const venvBerdaya Agent = path.join(updateRoot, 'venv', 'bin', 'hermes')
   if (fileExists(venvBerdaya Agent)) return venvBerdaya Agent
   return findOnPath('hermes') || null
@@ -1776,7 +1776,7 @@ function shellQuote(value) {
 // restart to load the new GUI" if the swap can't be performed.
 async function applyUpdatesPosixInApp() {
   const updateRoot = resolveUpdateRoot()
-  const hermes = resolveBerdaya AgentCliBinary(updateRoot)
+  const hermes = resolveHermesCliBinary(updateRoot)
   if (!hermes) {
     emitUpdateProgress({ stage: 'manual', message: 'hermes update', percent: null })
     return { ok: true, manual: true, command: 'hermes update', hermesRoot: updateRoot }
@@ -1955,7 +1955,7 @@ function isBootstrapComplete() {
   // a runnable venv: an interrupted or split-home install can leave the marker
   // + checkout without a venv, and trusting that spawns a dead backend
   // ("gateway offline") instead of re-running bootstrap to repair it.
-  return isBerdaya AgentSourceRoot(ACTIVE_HERMES_ROOT) && fileExists(getVenvPython(VENV_ROOT))
+  return isHermesSourceRoot(ACTIVE_HERMES_ROOT) && fileExists(getVenvPython(VENV_ROOT))
 }
 
 function writeBootstrapMarker(payload) {
@@ -2025,7 +2025,7 @@ function isPackagedInstallPath(dir) {
   })
 }
 
-function resolveBerdaya AgentCwd() {
+function resolveHermesCwd() {
   // In a packaged build, `process.cwd()` resolves to the install root (e.g.
   // `…/win-unpacked` on Windows or `/Applications/Berdaya Agent.app/Contents/...`
   // on macOS). Sessions spawned there leave files inside the app bundle
@@ -2060,7 +2060,7 @@ function sanitizeWorkspaceCwd(cwd) {
   const trimmed = typeof cwd === 'string' ? cwd.trim() : ''
 
   if (!trimmed || isPackagedInstallPath(trimmed)) {
-    return { cwd: resolveBerdaya AgentCwd(), sanitized: Boolean(trimmed) }
+    return { cwd: resolveHermesCwd(), sanitized: Boolean(trimmed) }
   }
 
   try {
@@ -2073,7 +2073,7 @@ function sanitizeWorkspaceCwd(cwd) {
     // Fall through to the resolved default.
   }
 
-  return { cwd: resolveBerdaya AgentCwd(), sanitized: Boolean(trimmed) }
+  return { cwd: resolveHermesCwd(), sanitized: Boolean(trimmed) }
 }
 
 // Persisted "Default project directory" — surfaced as a setting in the
@@ -2157,11 +2157,11 @@ function createActiveBackend(dashboardArgs) {
   }
 }
 
-function resolveBerdaya AgentBackend(dashboardArgs) {
+function resolveHermesBackend(dashboardArgs) {
   // 1. Explicit override -- HERMES_DESKTOP_HERMES_ROOT points at a developer
   //    checkout. Honour it as-is (no bootstrap; the user is driving).
   const overrideRoot = process.env.HERMES_DESKTOP_HERMES_ROOT && path.resolve(process.env.HERMES_DESKTOP_HERMES_ROOT)
-  if (overrideRoot && isBerdaya AgentSourceRoot(overrideRoot)) {
+  if (overrideRoot && isHermesSourceRoot(overrideRoot)) {
     const backend = createPythonBackend(overrideRoot, `Berdaya Agent source at ${overrideRoot}`, dashboardArgs)
     if (backend) return backend
   }
@@ -2169,8 +2169,8 @@ function resolveBerdaya AgentBackend(dashboardArgs) {
   // 2. Development source -- when running `npm run dev` from a checkout, the
   //    cloned repo at SOURCE_REPO_ROOT takes precedence over ACTIVE and any
   //    installed `hermes` on PATH so local Python edits are actually exercised.
-  //    (In dev with no checkout, SOURCE_REPO_ROOT won't pass isBerdaya AgentSourceRoot.)
-  if (!IS_PACKAGED && isBerdaya AgentSourceRoot(SOURCE_REPO_ROOT)) {
+  //    (In dev with no checkout, SOURCE_REPO_ROOT won't pass isHermesSourceRoot.)
+  if (!IS_PACKAGED && isHermesSourceRoot(SOURCE_REPO_ROOT)) {
     const backend = createPythonBackend(SOURCE_REPO_ROOT, `Berdaya Agent source at ${SOURCE_REPO_ROOT}`, dashboardArgs)
     if (backend) return backend
   }
@@ -2223,7 +2223,7 @@ function resolveBerdaya AgentBackend(dashboardArgs) {
       // `--version` probe (see backend-probes.cjs) catches that case
       // and lets the resolver fall through to step 6 / bootstrap.
       const shellForProbe = isCommandScript(hermesCommand)
-      if (verifyBerdaya AgentCli(hermesCommand, { shell: shellForProbe })) {
+      if (verifyHermesCli(hermesCommand, { shell: shellForProbe })) {
         return {
           label: `existing Berdaya Agent CLI at ${hermesCommand}`,
           command: hermesCommand,
@@ -2253,7 +2253,7 @@ function resolveBerdaya AgentBackend(dashboardArgs) {
     // Verify the import works before trusting the candidate; on
     // failure, fall through to step 6 so the bootstrap runner pulls
     // a uv-managed 3.11 into %LOCALAPPDATA%\hermes\hermes-agent\venv.
-    if (canImportBerdaya AgentCli(python)) {
+    if (canImportHermesCli(python)) {
       return {
         kind: 'python',
         label: `installed hermes_cli module via ${python}`,
@@ -2274,7 +2274,7 @@ function resolveBerdaya AgentBackend(dashboardArgs) {
   //    explaining what's missing.
   //
   //    We deliberately do NOT throw here -- throwing inside
-  //    resolveBerdaya AgentBackend was the old "no payload" path and forced the
+  //    resolveHermesBackend was the old "no payload" path and forced the
   //    user into a dead end. With the bootstrap protocol, "no install yet"
   //    is a recoverable state the GUI can drive through.
   return {
@@ -2299,7 +2299,7 @@ async function ensureRuntime(backend) {
     return backend
   }
 
-  // backend.kind === 'bootstrap-needed' means resolveBerdaya AgentBackend couldn't
+  // backend.kind === 'bootstrap-needed' means resolveHermesBackend couldn't
   // find anything to spawn. Hand off to the bootstrap runner which drives the
   // platform installer, writes the bootstrap-complete marker on success, then
   // we re-resolve to get the now-installed backend.
@@ -2383,7 +2383,7 @@ async function ensureRuntime(backend) {
     rememberLog('[bootstrap] bootstrap complete; marker written. Re-resolving backend.')
     // Re-resolve now that the install exists. The new resolution lands in
     // step 3 (bootstrap-complete marker) and we recurse to wire venvPython.
-    return ensureRuntime(resolveBerdaya AgentBackend(backend.args))
+    return ensureRuntime(resolveHermesBackend(backend.args))
   }
 
   // bootstrap=true with a real backend (createActiveBackend path) means we
@@ -2392,7 +2392,7 @@ async function ensureRuntime(backend) {
   // sync flow exited through, minus all the factory/pip/marker machinery
   // (install.ps1 owns those concerns now and the bootstrap-complete marker
   // attests they ran successfully).
-  if (!isBerdaya AgentSourceRoot(ACTIVE_HERMES_ROOT)) {
+  if (!isHermesSourceRoot(ACTIVE_HERMES_ROOT)) {
     throw new Error(
       `Berdaya Agent install at ${ACTIVE_HERMES_ROOT} is missing or incomplete. ` +
         'Reinstall via the desktop installer or scripts/install.ps1.'
@@ -2420,7 +2420,7 @@ async function ensureRuntime(backend) {
     // means we have a half-installed checkout: .git exists, source files
     // exist, but venv is missing or broken. This shouldn't happen in
     // normal flow because isBootstrapComplete() requires
-    // isBerdaya AgentSourceRoot() and the bootstrap writes the marker only after
+    // isHermesSourceRoot() and the bootstrap writes the marker only after
     // install.ps1 succeeds. If we hit this, the user (or a deleted venv)
     // broke the invariant; tell them to re-run the install.
     throw new Error(
@@ -2964,7 +2964,7 @@ function expandUserPath(filePath) {
 
 async function previewFileTarget(rawTarget, baseDir) {
   const raw = String(rawTarget || '').trim()
-  const base = baseDir ? path.resolve(expandUserPath(baseDir)) : resolveBerdaya AgentCwd()
+  const base = baseDir ? path.resolve(expandUserPath(baseDir)) : resolveHermesCwd()
   let resolved = resolveRequestedPathForIpc(/^file:/i.test(raw) ? raw : expandUserPath(raw), {
     baseDir: base,
     purpose: 'Preview target'
@@ -4379,7 +4379,7 @@ function resetBootProgressForReconnect() {
   )
 }
 
-function resetBerdaya AgentConnection() {
+function resetHermesConnection() {
   connectionPromise = null
 
   if (hermesProcess && !hermesProcess.killed) {
@@ -4395,9 +4395,9 @@ function resetBerdaya AgentConnection() {
 // startBerdaya Agent() spawns fresh instead of racing the dying one. Shared by the
 // connection-config and profile switch flows.
 async function teardownPrimaryBackendAndWait() {
-  // Capture the reference before resetBerdaya AgentConnection() nulls hermesProcess.
+  // Capture the reference before resetHermesConnection() nulls hermesProcess.
   const dying = hermesProcess && !hermesProcess.killed ? hermesProcess : null
-  resetBerdaya AgentConnection()
+  resetHermesConnection()
 
   await waitForBackendExit(dying)
 }
@@ -4539,8 +4539,8 @@ async function spawnPoolBackend(profile, entry) {
   // --profile wins over the inherited HERMES_HOME env (see _apply_profile_override
   // step 3 in hermes_cli/main.py), so the child re-homes to this profile.
   const dashboardArgs = ['--profile', profile, 'dashboard', '--no-open', '--host', '127.0.0.1', '--port', String(port)]
-  const backend = await ensureRuntime(resolveBerdaya AgentBackend(dashboardArgs))
-  const hermesCwd = resolveBerdaya AgentCwd()
+  const backend = await ensureRuntime(resolveHermesBackend(dashboardArgs))
+  const hermesCwd = resolveHermesCwd()
   const webDist = resolveWebDist()
 
   rememberLog(`Starting Berdaya Agent backend for profile "${profile}" via ${backend.label}`)
@@ -4738,8 +4738,8 @@ async function startBerdaya Agent() {
       dashboardArgs.unshift('--profile', activeProfile)
     }
     await advanceBootProgress('backend.runtime', 'Resolving Berdaya Agent runtime', 28)
-    const backend = await ensureRuntime(resolveBerdaya AgentBackend(dashboardArgs))
-    const hermesCwd = resolveBerdaya AgentCwd()
+    const backend = await ensureRuntime(resolveHermesBackend(dashboardArgs))
+    const hermesCwd = resolveHermesCwd()
     const webDist = resolveWebDist()
 
     await advanceBootProgress('backend.spawn', `Starting Berdaya Agent backend via ${backend.label}`, 84)
@@ -4750,7 +4750,7 @@ async function startBerdaya Agent() {
       env: {
         ...process.env,
         // Explicitly pin HERMES_HOME for the child so Python's get_hermes_home()
-        // resolves to the SAME location our resolveBerdayaHome() picked. Without
+        // resolves to the SAME location our resolveHermesHome() picked. Without
         // this pin, Python falls back to ~/.hermes on every platform — fine on
         // mac/linux (where our default matches), but on Windows our default is
         // %LOCALAPPDATA%\hermes, which differs from C:\Users\<u>\.hermes.
@@ -4811,7 +4811,7 @@ async function startBerdaya Agent() {
         )
         rejectBackendStart?.(
           new Error(
-            `Berdaya Agent backend exited before it became ready (${signal || code}). Log: ${DESKTOP_LOG_PATH}\n${recentBerdaya AgentLog()}`
+            `Berdaya Agent backend exited before it became ready (${signal || code}). Log: ${DESKTOP_LOG_PATH}\n${recentHermesLog()}`
           )
         )
       }
@@ -5099,10 +5099,10 @@ ipcMain.handle('hermes:connection:revalidate', async () => {
     return { ok: true, rebuilt: false }
   } catch {
     // Unreachable remote: drop the stale cache so the renderer's next reconnect
-    // tick rebuilds a fresh, reachable descriptor. resetBerdaya AgentConnection only
+    // tick rebuilds a fresh, reachable descriptor. resetHermesConnection only
     // nulls connectionPromise for a remote (no child to SIGTERM).
     rememberLog('Cached remote Berdaya Agent backend failed liveness probe; dropping stale connection.')
-    resetBerdaya AgentConnection()
+    resetHermesConnection()
     return { ok: true, rebuilt: true }
   }
 })
@@ -5153,7 +5153,7 @@ ipcMain.handle('hermes:bootstrap:repair', async () => {
     rememberLog(`[bootstrap] failed to remove marker during repair: ${error.message}`)
   }
   bootstrapFailure = null
-  resetBerdaya AgentConnection()
+  resetHermesConnection()
   return { ok: true }
 })
 ipcMain.handle('hermes:bootstrap:cancel', async () => {
@@ -5532,12 +5532,12 @@ ipcMain.handle('hermes:openExternal', (_event, url) => {
 
 // User-configurable default project directory. The renderer reads this on
 // settings mount and seeds the value into the picker; writing back persists
-// it via writeDefaultProjectDir so resolveBerdaya AgentCwd picks it up on the next
+// it via writeDefaultProjectDir so resolveHermesCwd picks it up on the next
 // session spawn (no app restart needed).
 ipcMain.handle('hermes:setting:defaultProjectDir:get', async () => ({
   dir: readDefaultProjectDir(),
   defaultLabel: app.getPath('home'),
-  resolvedCwd: resolveBerdaya AgentCwd()
+  resolvedCwd: resolveHermesCwd()
 }))
 
 ipcMain.handle('hermes:workspace:sanitize', async (_event, cwd) => sanitizeWorkspaceCwd(cwd))
@@ -5874,7 +5874,7 @@ ipcMain.handle('hermes:updates:branch:set', async (_event, name) => {
 // real Berdaya Agent version instead of the Electron app's own package.json version,
 // which historically drifted (stuck at 0.0.2). Falls back to app.getVersion()
 // when the source tree can't be read (e.g. a packaged build without the repo).
-function resolveBerdaya AgentVersion() {
+function resolveHermesVersion() {
   try {
     const root = resolveUpdateRoot()
     const initPath = path.join(root, 'hermes_cli', '__init__.py')
@@ -5898,14 +5898,14 @@ function resolveBerdaya AgentVersion() {
 function showAboutPanelFresh() {
   app.setAboutPanelOptions({
     applicationName: APP_NAME,
-    applicationVersion: resolveBerdaya AgentVersion(),
+    applicationVersion: resolveHermesVersion(),
     copyright: 'Copyright © 2026 Nous Research'
   })
   app.showAboutPanel()
 }
 
 ipcMain.handle('hermes:version', async () => ({
-  appVersion: resolveBerdaya AgentVersion(),
+  appVersion: resolveHermesVersion(),
   electronVersion: process.versions.electron,
   nodeVersion: process.versions.node,
   platform: process.platform,
@@ -5938,7 +5938,7 @@ async function getUninstallSummary() {
   // probe fails — the renderer still needs *something* to render options from.
   const fallback = () => ({
     hermes_home: HERMES_HOME,
-    agent_installed: isBerdaya AgentSourceRoot(agentRoot) && fileExists(py),
+    agent_installed: isHermesSourceRoot(agentRoot) && fileExists(py),
     gui_installed: true,
     source_built_artifacts: [],
     packaged_app_paths: [],

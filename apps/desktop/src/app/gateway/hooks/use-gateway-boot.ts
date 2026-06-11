@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 
-import type { Berdaya AgentConnection } from '@/global'
-import { Berdaya AgentGateway } from '@/hermes'
+import type { HermesConnection } from '@/global'
+import { HermesGateway } from '@/hermes'
 import { translateNow } from '@/i18n'
 import { isGatewayReauthRequired, resolveGatewayWsUrl } from '@/lib/gateway-ws-url'
 import {
@@ -40,8 +40,8 @@ interface GatewayBootOptions {
   onConnectionReady: (
     connection: Awaited<ReturnType<NonNullable<typeof window.hermesDesktop>['getConnection']>> | null
   ) => void
-  onGatewayReady: (gateway: Berdaya AgentGateway | null) => void
-  refreshBerdaya AgentConfig: () => Promise<void>
+  onGatewayReady: (gateway: HermesGateway | null) => void
+  refreshHermesConfig: () => Promise<void>
   refreshSessions: () => Promise<void>
 }
 
@@ -49,14 +49,14 @@ export function useGatewayBoot({
   handleGatewayEvent,
   onConnectionReady,
   onGatewayReady,
-  refreshBerdaya AgentConfig,
+  refreshHermesConfig,
   refreshSessions
 }: GatewayBootOptions) {
   const callbacksRef = useRef({
     handleGatewayEvent,
     onConnectionReady,
     onGatewayReady,
-    refreshBerdaya AgentConfig,
+    refreshHermesConfig,
     refreshSessions
   })
 
@@ -64,7 +64,7 @@ export function useGatewayBoot({
     handleGatewayEvent,
     onConnectionReady,
     onGatewayReady,
-    refreshBerdaya AgentConfig,
+    refreshHermesConfig,
     refreshSessions
   }
 
@@ -72,7 +72,7 @@ export function useGatewayBoot({
     let cancelled = false
     const desktop = window.hermesDesktop
 
-    const publish = (next: Berdaya AgentConnection | null) => {
+    const publish = (next: HermesConnection | null) => {
       callbacksRef.current.onConnectionReady(next)
       setConnection(next)
     }
@@ -151,7 +151,7 @@ export function useGatewayBoot({
 
         reconnectAttempt = 0
         // Resync state that may have moved on the backend while we were asleep.
-        await callbacksRef.current.refreshBerdaya AgentConfig().catch(() => undefined)
+        await callbacksRef.current.refreshHermesConfig().catch(() => undefined)
         await callbacksRef.current.refreshSessions().catch(() => undefined)
       } catch (err) {
         // OAuth session expired mid-reconnect: surface the actionable "sign in
@@ -211,7 +211,7 @@ export function useGatewayBoot({
       progress: 6
     })
 
-    const gateway = new Berdaya AgentGateway()
+    const gateway = new HermesGateway()
     callbacksRef.current.onGatewayReady(gateway)
     setPrimaryGateway(gateway, normalizeProfileKey($activeGatewayProfile.get()))
     // Secondary (background-profile) sockets funnel into the same handler.
@@ -353,7 +353,7 @@ export function useGatewayBoot({
           progress: 97
         })
         await ensureDefaultWorkspaceCwd()
-        await callbacksRef.current.refreshBerdaya AgentConfig()
+        await callbacksRef.current.refreshHermesConfig()
 
         if (cancelled) {
           return

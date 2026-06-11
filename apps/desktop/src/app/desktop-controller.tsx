@@ -102,7 +102,7 @@ import { SessionPickerOverlay } from './session-picker-overlay'
 import { SessionSwitcher } from './session-switcher'
 import { useContextSuggestions } from './session/hooks/use-context-suggestions'
 import { useCwdActions } from './session/hooks/use-cwd-actions'
-import { useBerdaya AgentConfig } from './session/hooks/use-hermes-config'
+import { useHermesConfig } from './session/hooks/use-hermes-config'
 import { useMessageStream } from './session/hooks/use-message-stream'
 import { useModelControls } from './session/hooks/use-model-controls'
 import { usePreviewRouting } from './session/hooks/use-preview-routing'
@@ -476,7 +476,7 @@ export function DesktopController() {
     requestGateway
   })
 
-  const { refreshBerdaya AgentConfig, sttEnabled, voiceMaxRecordingSeconds } = useBerdaya AgentConfig({
+  const { refreshHermesConfig, sttEnabled, voiceMaxRecordingSeconds } = useHermesConfig({
     activeSessionIdRef,
     refreshProjectBranch
   })
@@ -552,7 +552,7 @@ export function DesktopController() {
     activeSessionIdRef,
     hydrateFromStoredSession,
     queryClient,
-    refreshBerdaya AgentConfig,
+    refreshHermesConfig,
     refreshSessions,
     updateSessionState
   })
@@ -710,7 +710,7 @@ export function DesktopController() {
     onGatewayReady: g => {
       gatewayRef.current = g
     },
-    refreshBerdaya AgentConfig,
+    refreshHermesConfig,
     refreshSessions
   })
 
@@ -748,9 +748,9 @@ export function DesktopController() {
   useEffect(() => {
     if (gatewayState === 'open' && !activeSessionId && freshDraftReady) {
       void refreshCurrentModel()
-      void refreshBerdaya AgentConfig()
+      void refreshHermesConfig()
     }
-  }, [activeSessionId, freshDraftReady, gatewayState, refreshCurrentModel, refreshBerdaya AgentConfig])
+  }, [activeSessionId, freshDraftReady, gatewayState, refreshCurrentModel, refreshHermesConfig])
 
   useRouteResume({
     activeSessionId,
@@ -823,7 +823,7 @@ export function DesktopController() {
         <DesktopOnboardingOverlay
           enabled={gatewayState === 'open'}
           onCompleted={() => {
-            void refreshBerdaya AgentConfig()
+            void refreshHermesConfig()
             void refreshCurrentModel()
             void queryClient.invalidateQueries({ queryKey: ['model-options'] })
           }}
@@ -845,7 +845,7 @@ export function DesktopController() {
             gateway={gatewayRef.current}
             onClose={closeOverlayToPreviousRoute}
             onConfigSaved={() => {
-              void refreshBerdaya AgentConfig()
+              void refreshHermesConfig()
               void refreshCurrentModel()
               void queryClient.invalidateQueries({ queryKey: ['model-options'] })
             }}

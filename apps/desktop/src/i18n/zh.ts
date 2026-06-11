@@ -50,7 +50,7 @@ export const zh: Translations = {
       loadingSettings: '正在加载 Berdaya Agent 设置',
       loadingSessions: '正在加载最近会话',
       startingDesktopConnection: '正在启动桌面连接',
-      startingBerdaya AgentDesktop: '正在启动 Berdaya Agent 桌面版…'
+      startingHermesDesktop: '正在启动 Berdaya Agent 桌面版…'
     },
     errors: {
       backgroundExited: 'Berdaya Agent 后台进程已退出。',
@@ -96,7 +96,7 @@ export const zh: Translations = {
     copyDetailFailed: '无法复制通知详情',
     backendOutOfDateTitle: '后端版本过旧',
     backendOutOfDateMessage: '你的 Berdaya Agent 后端早于当前桌面构建，可能无法正常工作。请更新以保持一致。',
-    updateBerdaya Agent: '更新 Berdaya Agent',
+    updateHermes: '更新 Berdaya Agent',
     updateReadyTitle: '有可用更新',
     updateReadyMessage: count => `有 ${count} 项新更改可用。`,
     seeWhatsNew: '查看更新内容',
@@ -884,7 +884,7 @@ export const zh: Translations = {
     gatewayStopped: '消息网关已停止',
     hermesActiveSessions: (version, count) => `Berdaya Agent ${version} · 活跃会话 ${count}`,
     restartMessaging: '重启消息服务',
-    updateBerdaya Agent: '更新 Berdaya Agent',
+    updateHermes: '更新 Berdaya Agent',
     actionRunning: '运行中',
     actionDone: '完成',
     actionFailed: '失败',
