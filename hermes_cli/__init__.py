@@ -1,5 +1,5 @@
 """
-Hermes CLI - Unified command-line interface for Hermes Agent.
+Berdaya Agent CLI - Unified command-line interface for Berdaya Agent.
 
 Provides subcommands for:
 - hermes chat          - Interactive chat (same as ./hermes)

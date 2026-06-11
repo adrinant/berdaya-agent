@@ -1,4 +1,4 @@
-# Hermes Achievements Implementation Spec (Detailed)
+# Berdaya Agent Achievements Implementation Spec (Detailed)
 
 This document is implementation-facing detail to execute the performance refactor later.
 

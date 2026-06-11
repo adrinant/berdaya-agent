@@ -223,7 +223,7 @@ _hermes_home: Path | None = None
 
 
 def _get_hermes_home() -> Path:
-    """Resolve Hermes home dynamically while preserving test monkeypatch hooks."""
+    """Resolve Berdaya Agent home dynamically while preserving test monkeypatch hooks."""
     return _hermes_home or get_hermes_home()
 
 

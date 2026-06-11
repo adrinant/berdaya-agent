@@ -1,0 +1,11 @@
+#!/usr/bin/env python3
+"""
+Berdaya Agent CLI launcher.
+
+Primary command for Berdaya Agent — use ``berdaya`` instead of the legacy
+``hermes`` alias when possible.
+"""
+
+if __name__ == "__main__":
+    from hermes_cli.main import main
+    main()

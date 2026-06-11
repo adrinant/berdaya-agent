@@ -1,4 +1,4 @@
-class HermesAgent < Formula
+class Berdaya AgentAgent < Formula
   include Language::Python::Virtualenv
 
   desc "Self-improving AI agent that creates skills from experience"
@@ -39,7 +39,7 @@ class HermesAgent < Formula
   end
 
   test do
-    assert_match "Hermes Agent v#{version}", shell_output("#{bin}/hermes version")
+    assert_match "Berdaya Agent v#{version}", shell_output("#{bin}/hermes version")
 
     managed = shell_output("#{bin}/hermes update 2>&1")
     assert_match "managed by Homebrew", managed

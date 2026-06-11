@@ -1,8 +1,8 @@
 import ignore from 'ignore'
 
-import type { HermesReadDirEntry, HermesReadDirResult } from '@/global'
+import type { Berdaya AgentReadDirEntry, Berdaya AgentReadDirResult } from '@/global'
 
-export type ProjectTreeEntry = HermesReadDirEntry
+export type ProjectTreeEntry = Berdaya AgentReadDirEntry
 
 interface GitignoreRule {
   base: string
@@ -111,7 +111,7 @@ async function gitignoreFor(dir: string) {
   return cached
 }
 
-function ignoredBy(rules: GitignoreRule[], entry: HermesReadDirEntry) {
+function ignoredBy(rules: GitignoreRule[], entry: Berdaya AgentReadDirEntry) {
   return rules.some(rule => {
     const rel = relativeTo(rule.base, entry.path)
 
@@ -123,7 +123,7 @@ function ignoredBy(rules: GitignoreRule[], entry: HermesReadDirEntry) {
   })
 }
 
-async function filterIgnored(entries: HermesReadDirEntry[], rootPath: string, dirPath: string) {
+async function filterIgnored(entries: Berdaya AgentReadDirEntry[], rootPath: string, dirPath: string) {
   const root = await gitRootFor(rootPath)
 
   if (!root) {
@@ -137,7 +137,7 @@ async function filterIgnored(entries: HermesReadDirEntry[], rootPath: string, di
   return rules.length > 0 ? entries.filter(entry => !ignoredBy(rules, entry)) : entries
 }
 
-export async function readProjectDir(dirPath: string, rootPath = dirPath): Promise<HermesReadDirResult> {
+export async function readProjectDir(dirPath: string, rootPath = dirPath): Promise<Berdaya AgentReadDirResult> {
   if (!window.hermesDesktop) {
     return { entries: [], error: 'no-bridge' }
   }

@@ -1,4 +1,4 @@
-"""Shared constants for Hermes Agent.
+"""Shared constants for Berdaya Agent.
 
 Import-safe module with no dependencies — can be imported from anywhere
 without risk of circular imports.
@@ -19,7 +19,7 @@ _HERMES_HOME_OVERRIDE: ContextVar[str | object] = ContextVar(
 
 
 def set_hermes_home_override(path: str | Path | None) -> Token:
-    """Set a context-local Hermes home override and return its reset token.
+    """Set a context-local Berdaya Agent home override and return its reset token.
 
     This is for in-process, per-task scoping.  It deliberately does not mutate
     ``os.environ`` because that is shared by every thread in the process.
@@ -29,12 +29,12 @@ def set_hermes_home_override(path: str | Path | None) -> Token:
 
 
 def reset_hermes_home_override(token: Token) -> None:
-    """Restore the previous context-local Hermes home override."""
+    """Restore the previous context-local Berdaya Agent home override."""
     _HERMES_HOME_OVERRIDE.reset(token)
 
 
 def get_hermes_home_override() -> str | None:
-    """Return the active context-local Hermes home override, if any."""
+    """Return the active context-local Berdaya Agent home override, if any."""
     override = _HERMES_HOME_OVERRIDE.get()
     if override is _UNSET or not override:
         return None
@@ -42,7 +42,16 @@ def get_hermes_home_override() -> str | None:
 
 
 def _get_platform_default_hermes_home() -> Path:
-    """Return the platform-native default Hermes home path."""
+    """Return the platform-native default Berdaya Agent home path (``~/.berdaya``)."""
+    if sys.platform == "win32":
+        local_appdata = os.environ.get("LOCALAPPDATA", "").strip()
+        base = Path(local_appdata) if local_appdata else Path.home() / "AppData" / "Local"
+        return base / "berdaya"
+    return Path.home() / ".berdaya"
+
+
+def _get_legacy_default_hermes_home() -> Path:
+    """Return the pre-rebrand default home path (``~/.hermes``) for migration."""
     if sys.platform == "win32":
         local_appdata = os.environ.get("LOCALAPPDATA", "").strip()
         base = Path(local_appdata) if local_appdata else Path.home() / "AppData" / "Local"
@@ -50,27 +59,60 @@ def _get_platform_default_hermes_home() -> Path:
     return Path.home() / ".hermes"
 
 
+def _resolve_home_env() -> str:
+    """Return an explicit home override from ``BERDAYA_HOME`` or ``HERMES_HOME``."""
+    for key in ("BERDAYA_HOME", "HERMES_HOME"):
+        val = os.environ.get(key, "").strip()
+        if val:
+            return val
+    return ""
+
+
+def _resolve_default_hermes_home() -> Path:
+    """Pick the default home when no env override is set.
+
+    Prefer ``~/.berdaya`` when it exists; otherwise fall back to legacy
+    ``~/.hermes`` so existing installs keep working without migration.
+    """
+    berdaya_home = _get_platform_default_hermes_home()
+    legacy_home = _get_legacy_default_hermes_home()
+    if berdaya_home.exists():
+        return berdaya_home
+    if legacy_home.exists():
+        return legacy_home
+    return berdaya_home
+
+
+def _native_home_roots() -> tuple[Path, ...]:
+    """Known native install roots (current + legacy), deduped."""
+    roots = (_get_platform_default_hermes_home(), _get_legacy_default_hermes_home())
+    seen: set[str] = set()
+    out: list[Path] = []
+    for root in roots:
+        key = str(root.resolve()) if root.exists() else str(root)
+        if key not in seen:
+            seen.add(key)
+            out.append(root)
+    return tuple(out)
+
+
 def get_hermes_home() -> Path:
-    """Return the Hermes home directory (default: platform-native path).
+    """Return the Berdaya Agent home directory (default: platform-native path).
 
-    Reads HERMES_HOME env var, falls back to the platform-native default.
-    This is the single source of truth — all other copies should import this.
+    Reads ``BERDAYA_HOME`` (preferred) or ``HERMES_HOME``, then falls back to
+    ``~/.berdaya`` (or legacy ``~/.hermes`` when that is the only existing
+    install).  This is the single source of truth — all other copies should
+    import this.
 
-    When ``HERMES_HOME`` is unset but an ``active_profile`` file indicates
-    a non-default profile is active, logs a loud one-shot warning to
-    ``errors.log`` so cross-profile data corruption is diagnosable instead
-    of silent.  Behavior is unchanged otherwise — we still return
-    the platform-native default — because raising here would brick 30+ module-level
-    callers that import this at load time.  Subprocess spawners are
-    expected to propagate ``HERMES_HOME`` explicitly (see the systemd
-    template in ``hermes_cli/gateway.py`` and the kanban dispatcher in
-    ``hermes_cli/kanban_db.py``).  See https://github.com/NousResearch/hermes-agent/issues/18594.
+    When neither env var is set but an ``active_profile`` file indicates
+    a non-default profile is active, logs a loud one-shot warning to stderr
+    so cross-profile data corruption is diagnosable instead of silent.
     """
     override = get_hermes_home_override()
     if override:
         return Path(override)
 
-    val = os.environ.get("HERMES_HOME", "").strip()
+    val = _resolve_home_env()
     if val:
         return Path(val)
 
@@ -79,25 +121,25 @@ def get_hermes_home() -> Path:
     global _profile_fallback_warned
     if not _profile_fallback_warned:
         try:
-            fallback_home = _get_platform_default_hermes_home()
-            active_path = fallback_home / "active_profile"
-            active = active_path.read_text().strip() if active_path.exists() else ""
+            active = ""
+            fallback_home = _resolve_default_hermes_home()
+            for root in _native_home_roots():
+                active_path = root / "active_profile"
+                if active_path.exists():
+                    active = active_path.read_text().strip()
+                    fallback_home = root
+                    break
         except (UnicodeDecodeError, OSError):
             active = ""
+            fallback_home = _resolve_default_hermes_home()
         if active and active != "default":
             _profile_fallback_warned = True
-            # Write directly to stderr.  We intentionally do NOT route this
-            # through ``logging`` because (a) this function is called at
-            # module-import time from 30+ sites, often before logging is
-            # configured, and (b) root-logger propagation would double-emit
-            # on consoles where a StreamHandler is already attached.
             msg = (
-                f"[HERMES_HOME fallback] HERMES_HOME is unset but active "
+                f"[BERDAYA_HOME fallback] BERDAYA_HOME/HERMES_HOME is unset but active "
                 f"profile is {active!r}. Falling back to {fallback_home}, which "
                 f"is the DEFAULT profile — not {active!r}. Any data this "
                 f"process writes will land in the wrong profile. The "
-                f"subprocess spawner should pass HERMES_HOME explicitly "
-                f"(see issue #18594)."
+                f"subprocess spawner should pass BERDAYA_HOME explicitly."
             )
             try:
                 sys.stderr.write(msg + "\n")
@@ -105,37 +147,38 @@ def get_hermes_home() -> Path:
             except Exception:
                 pass
 
-    return _get_platform_default_hermes_home()
+    return _resolve_default_hermes_home()
 
 
 def get_default_hermes_root() -> Path:
-    """Return the root Hermes directory for profile-level operations.
+    """Return the root Berdaya Agent directory for profile-level operations.
 
-    In standard deployments this is the platform-native Hermes home
-    (``~/.hermes`` on POSIX, ``%LOCALAPPDATA%\\hermes`` on native Windows).
+    In standard deployments this is the platform-native Berdaya Agent home
+    (``~/.berdaya`` on POSIX, ``%LOCALAPPDATA%\\berdaya`` on native Windows),
+    or legacy ``~/.hermes`` when that is the only existing install.
 
-    In Docker or custom deployments where ``HERMES_HOME`` points outside
-    ``~/.hermes`` (e.g. ``/opt/data``), returns ``HERMES_HOME`` directly
-    — that IS the root.
+    In Docker or custom deployments where ``BERDAYA_HOME`` / ``HERMES_HOME``
+    points outside the native root (e.g. ``/opt/data``), returns that root
+    directly — that IS the root.
 
-    In profile mode where ``HERMES_HOME`` is ``<root>/profiles/<name>``,
+    In profile mode where the home env var is ``<root>/profiles/<name>``,
     returns ``<root>`` so that ``profile list`` can see all profiles.
-    Works both for standard (``~/.hermes/profiles/coder``) and Docker
+    Works both for standard (``~/.berdaya/profiles/coder``) and Docker
     (``/opt/data/profiles/coder``) layouts.
 
     Import-safe — no dependencies beyond stdlib.
     """
-    native_home = _get_platform_default_hermes_home()
-    env_home = os.environ.get("HERMES_HOME", "")
+    native_home = _resolve_default_hermes_home()
+    env_home = _resolve_home_env()
     if not env_home:
         return native_home
     env_path = Path(env_home)
-    try:
-        env_path.resolve().relative_to(native_home.resolve())
-        # HERMES_HOME is under ~/.hermes (normal or profile mode)
-        return native_home
-    except ValueError:
-        pass
+    for root in _native_home_roots():
+        try:
+            env_path.resolve().relative_to(root.resolve())
+            return root
+        except ValueError:
+            continue
 
     # Docker / custom deployment.
     # Check if this is a profile path: <root>/profiles/<name>
@@ -151,7 +194,7 @@ def get_default_hermes_root() -> Path:
 def _get_packaged_data_dir(name: str) -> Path | None:
     """Return an installed data-files directory if one exists.
 
-    Used to discover bundled skills/optional-skills when Hermes is installed
+    Used to discover bundled skills/optional-skills when Berdaya Agent is installed
     from a wheel that emitted them via setuptools data_files.
     """
     candidates = []
@@ -222,7 +265,7 @@ def get_bundled_skills_dir(default: Path | None = None) -> Path:
 
 
 def get_hermes_dir(new_subpath: str, old_name: str) -> Path:
-    """Resolve a Hermes subdirectory with backward compatibility.
+    """Resolve a Berdaya Agent subdirectory with backward compatibility.
 
     New installs get the consolidated layout (e.g. ``cache/images``).
     Existing installs that already have the old path (e.g. ``image_cache``)
@@ -243,16 +286,16 @@ def get_hermes_dir(new_subpath: str, old_name: str) -> Path:
 
 
 def display_hermes_home() -> str:
-    """Return a user-friendly display string for the current HERMES_HOME.
+    """Return a user-friendly display string for the current Berdaya Agent home.
 
     Uses ``~/`` shorthand for readability::
 
-        default:  ``~/.hermes``
-        profile:  ``~/.hermes/profiles/coder``
-        custom:   ``/opt/hermes-custom``
+        default:  ``~/.berdaya``
+        profile:  ``~/.berdaya/profiles/coder``
+        custom:   ``/opt/berdaya-custom``
 
     Use this in **user-facing** print/log messages instead of hardcoding
-    ``~/.hermes``.  For code that needs a real ``Path``, use
+    ``~/.berdaya``.  For code that needs a real ``Path``, use
     :func:`get_hermes_home` instead.
     """
     home = get_hermes_home()
@@ -287,7 +330,7 @@ def get_subprocess_home() -> str | None:
 
     When ``{HERMES_HOME}/home/`` exists on disk, subprocesses should use it
     as ``HOME`` so system tools (git, ssh, gh, npm …) write their configs
-    inside the Hermes data directory instead of the OS-level ``/root`` or
+    inside the Berdaya Agent data directory instead of the OS-level ``/root`` or
     ``~/``.  This provides:
 
     * **Docker persistence** — tool configs land inside the persistent volume.

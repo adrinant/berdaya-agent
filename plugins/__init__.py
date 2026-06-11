@@ -1,1 +1,1 @@
-# Hermes plugins package
+# Berdaya Agent plugins package

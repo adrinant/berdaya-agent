@@ -1,11 +1,11 @@
 # Tool Matrix — Skills + Toolsets per Role
 
-Maps each role archetype to the Hermes skills it should `always_load` and the
+Maps each role archetype to the Berdaya Agent skills it should `always_load` and the
 toolsets it needs. Only references skills that ship in the public hermes-agent
 repository (under `skills/` or `optional-skills/`). External APIs and CLIs are
 called from the terminal toolset; they don't appear in `always_load`.
 
-## Hermes skills relevant to video production
+## Berdaya Agent skills relevant to video production
 
 ### Visual / rendering skills (`hermes-agent/skills/creative/`)
 
@@ -65,7 +65,7 @@ profile needs them.
 
 ## External tools (called from terminal toolset)
 
-These are **not** Hermes skills but external CLIs / APIs that profiles invoke.
+These are **not** Berdaya Agent skills but external CLIs / APIs that profiles invoke.
 They don't appear in `always_load`; instead the role's terminal commands hit
 them directly.
 
@@ -82,9 +82,9 @@ them directly.
 | Manim CE (`manim`) | Math animation render (driven by `manim-video` skill's recipes) | renderer-manim |
 | Blender (`blender -b`) | 3D rendering (alternative to `blender-mcp`) | renderer-3d |
 
-## Built-in Hermes tools for media review
+## Built-in Berdaya Agent tools for media review
 
-These are native Hermes tools — not invoked via terminal but through their own
+These are native Berdaya Agent tools — not invoked via terminal but through their own
 toolsets. Enable them per-profile by adding the toolset to the profile config.
 
 | Tool | Toolset | What it does | Profile that uses it |
@@ -298,7 +298,7 @@ key is present in `${HERMES_HOME:-~/.hermes}/.env` (or macOS Keychain) before fi
 | Luma | `LUMA_API_KEY` | image-to-video-generator (alternate) |
 | Suno | `SUNO_API_KEY` | music-supervisor (paired with `songwriting-and-ai-music`) |
 | Spotify | `SPOTIFY_CLIENT_ID` + `SPOTIFY_CLIENT_SECRET` | music-supervisor (paired with `spotify` skill) |
-| Anthropic | `ANTHROPIC_API_KEY` | every Hermes profile (Claude) |
+| Anthropic | `ANTHROPIC_API_KEY` | every Berdaya Agent profile (Claude) |
 
 If a key is missing, prompt the user to add it. Storage methods, in order of
 preference: macOS Keychain → `${HERMES_HOME:-~/.hermes}/.env` → environment variable.
@@ -310,7 +310,7 @@ If a specific skill version is desired, pass it via the per-task
 
 ## Adding a new skill to the matrix
 
-When a new Hermes-public video skill ships:
+When a new Berdaya Agent-public video skill ships:
 
 1. Add a row to the relevant table at the top of this file
 2. If it warrants a specialized renderer variant, add to `role-archetypes.md`

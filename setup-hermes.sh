@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================================
-# Hermes Agent Setup Script
+# Berdaya Agent Setup Script
 # ============================================================================
 # Quick setup for developers who cloned the repo manually.
 # Uses uv for desktop/server setup and Python's stdlib venv + pip on Termux.
@@ -56,7 +56,7 @@ get_command_link_display_dir() {
 }
 
 echo ""
-echo -e "${CYAN}⚕ Hermes Agent Setup${NC}"
+echo -e "${CYAN}⚕ Berdaya Agent Setup${NC}"
 echo ""
 
 # ============================================================================
@@ -345,14 +345,20 @@ fi
 # PATH setup — symlink hermes into a user-facing bin dir
 # ============================================================================
 
-echo -e "${CYAN}→${NC} Setting up hermes command..."
+echo -e "${CYAN}→${NC} Setting up berdaya command..."
 
+BERDAYA_BIN="$SCRIPT_DIR/venv/bin/berdaya"
 HERMES_BIN="$SCRIPT_DIR/venv/bin/hermes"
+if [ ! -x "$BERDAYA_BIN" ] && [ -x "$HERMES_BIN" ]; then
+    BERDAYA_BIN="$HERMES_BIN"
+fi
 COMMAND_LINK_DIR="$(get_command_link_dir)"
 COMMAND_LINK_DISPLAY_DIR="$(get_command_link_display_dir)"
 mkdir -p "$COMMAND_LINK_DIR"
-ln -sf "$HERMES_BIN" "$COMMAND_LINK_DIR/hermes"
-echo -e "${GREEN}✓${NC} Symlinked hermes → $COMMAND_LINK_DISPLAY_DIR/hermes"
+ln -sf "$BERDAYA_BIN" "$COMMAND_LINK_DIR/berdaya"
+ln -sf "$BERDAYA_BIN" "$COMMAND_LINK_DIR/hermes"
+echo -e "${GREEN}✓${NC} Symlinked berdaya → $COMMAND_LINK_DISPLAY_DIR/berdaya"
+echo -e "${GREEN}✓${NC} Symlinked hermes (alias) → $COMMAND_LINK_DISPLAY_DIR/hermes"
 
 if is_termux; then
     export PATH="$COMMAND_LINK_DIR:$PATH"
@@ -383,7 +389,7 @@ else
         if ! echo "$PATH" | tr ':' '\n' | grep -q "^$HOME/.local/bin$"; then
             if ! grep -q '\.local/bin' "$SHELL_CONFIG" 2>/dev/null; then
                 echo "" >> "$SHELL_CONFIG"
-                echo "# Hermes Agent — ensure ~/.local/bin is on PATH" >> "$SHELL_CONFIG"
+                echo "# Berdaya Agent — ensure ~/.local/bin is on PATH" >> "$SHELL_CONFIG"
                 echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$SHELL_CONFIG"
                 echo -e "${GREEN}✓${NC} Added ~/.local/bin to PATH in $SHELL_CONFIG"
             else

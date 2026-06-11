@@ -32,7 +32,7 @@ from hermes_cli.model_switch import (
         "hermes_4_70b",
         "openrouter/hermes3:70b",
         "openrouter/nousresearch/hermes-4-405b",
-        "NousResearch/Hermes3",
+        "NousResearch/Berdaya Agent3",
         "hermes-3.1",
     ],
 )
@@ -60,7 +60,7 @@ def test_matches_real_nous_hermes_chat_models(model_name: str) -> None:
         "openai/gpt-4o",
         "google/gemini-2.5-flash",
         "deepseek-chat",
-        # Non-chat Hermes models we don't warn about
+        # Non-chat Berdaya Agent models we don't warn about
         "hermes-llm-2",
         "hermes2-pro",
         "nous-hermes-2-mistral",
