@@ -69,7 +69,7 @@ After installation:
 
 ```bash
 source ~/.bashrc    # reload shell (or: source ~/.zshrc)
-berdaya             # start chatting!  (hermes still works as a legacy alias)
+berdaya             # start chatting!
 ```
 
 ---

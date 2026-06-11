@@ -1696,7 +1696,7 @@ function Set-PathVariable {
     # Update current session
     $env:Path = "$hermesBin;$env:Path"
     
-    Write-Success "berdaya command ready (hermes alias also available)"
+    Write-Success "berdaya command ready"
 }
 
 function Write-BootstrapMarker {

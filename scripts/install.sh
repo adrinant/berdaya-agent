@@ -1533,22 +1533,21 @@ setup_path() {
     command_link_dir="$(get_command_link_dir)"
     command_link_display_dir="$(get_command_link_display_dir)"
 
-    # Create user-facing shims for berdaya (primary) and hermes (legacy alias).
+    # Create the user-facing berdaya shim.
     # We intentionally clear PYTHONPATH/PYTHONHOME here so inherited env vars
     # can't make this launcher import modules from another checkout.
     mkdir -p "$command_link_dir"
-    for cmd_name in berdaya hermes; do
-        rm -f "$command_link_dir/$cmd_name"
-        cat > "$command_link_dir/$cmd_name" <<EOF
+    rm -f "$command_link_dir/berdaya"
+    cat > "$command_link_dir/berdaya" <<EOF
 #!/usr/bin/env bash
 unset PYTHONPATH
 unset PYTHONHOME
 exec "$BERDAYA_BIN" "\$@"
 EOF
-        chmod +x "$command_link_dir/$cmd_name"
-    done
+    chmod +x "$command_link_dir/berdaya"
+    # Remove any hermes alias shim left behind by an older Berdaya install.
+    rm -f "$command_link_dir/hermes"
     log_success "Installed berdaya launcher → $command_link_display_dir/berdaya"
-    log_success "Installed hermes alias → $command_link_display_dir/hermes"
 
     if [ "$DISTRO" = "termux" ]; then
         export PATH="$command_link_dir:$PATH"
