@@ -71,16 +71,12 @@ def _resolve_home_env() -> str:
 def _resolve_default_hermes_home() -> Path:
     """Pick the default home when no env override is set.
 
-    Prefer ``~/.berdaya`` when it exists; otherwise fall back to legacy
-    ``~/.hermes`` so existing installs keep working without migration.
+    Always the platform-native ``~/.berdaya`` (or ``%LOCALAPPDATA%\\berdaya``).
+    Berdaya Agent is a separate product from upstream Hermes — we never adopt
+    an existing ``~/.hermes`` install, so a machine with old Hermes data gets
+    a fresh, fully isolated home. Relocate with ``BERDAYA_HOME``.
     """
-    berdaya_home = _get_platform_default_hermes_home()
-    legacy_home = _get_legacy_default_hermes_home()
-    if berdaya_home.exists():
-        return berdaya_home
-    if legacy_home.exists():
-        return legacy_home
-    return berdaya_home
+    return _get_platform_default_hermes_home()
 
 
 def _native_home_roots() -> tuple[Path, ...]:
@@ -100,9 +96,8 @@ def get_hermes_home() -> Path:
     """Return the Berdaya Agent home directory (default: platform-native path).
 
     Reads ``BERDAYA_HOME`` (preferred) or ``HERMES_HOME``, then falls back to
-    ``~/.berdaya`` (or legacy ``~/.hermes`` when that is the only existing
-    install).  This is the single source of truth — all other copies should
-    import this.
+    ``~/.berdaya`` (``%LOCALAPPDATA%\\berdaya`` on native Windows). This is
+    the single source of truth — all other copies should import this.
 
     When neither env var is set but an ``active_profile`` file indicates
     a non-default profile is active, logs a loud one-shot warning to stderr

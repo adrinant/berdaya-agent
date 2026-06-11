@@ -26,8 +26,11 @@ param(
     # exact ref.  Precedence: Commit > Tag > Branch.
     [string]$Commit = "",
     [string]$Tag = "",
-    [string]$BerdayaHome = $(if ($env:BERDAYA_HOME) { $env:BERDAYA_HOME } elseif ($env:HERMES_HOME) { $env:HERMES_HOME } else { "$env:LOCALAPPDATA\berdaya" }),
-    [string]$InstallDir = $(if ($env:BERDAYA_HOME) { "$env:BERDAYA_HOME\hermes-agent" } elseif ($env:HERMES_HOME) { "$env:HERMES_HOME\hermes-agent" } else { "$env:LOCALAPPDATA\berdaya\hermes-agent" }),
+    # Only BERDAYA_HOME relocates the install. A legacy HERMES_HOME env var
+    # (left behind by an old upstream Hermes install) must NOT hijack Berdaya
+    # into the foreign hermes folder — the two apps stay fully separate.
+    [string]$BerdayaHome = $(if ($env:BERDAYA_HOME) { $env:BERDAYA_HOME } else { "$env:LOCALAPPDATA\berdaya" }),
+    [string]$InstallDir = $(if ($env:BERDAYA_HOME) { "$env:BERDAYA_HOME\hermes-agent" } else { "$env:LOCALAPPDATA\berdaya\hermes-agent" }),
 
     # --- Stage protocol (additive; default invocation behaves as before) ----
     # See the "Stage protocol" section near the bottom of the file for the
@@ -1678,16 +1681,15 @@ function Set-PathVariable {
         Write-Info "PATH already configured"
     }
     
-    # Set BERDAYA_HOME (and legacy HERMES_HOME) so Python finds config/data.
-    # Only needed on Windows where we install to %LOCALAPPDATA%\berdaya instead
-    # of the Unix default ~/.berdaya
+    # Set BERDAYA_HOME so Python finds config/data. Only needed on Windows
+    # where we install to %LOCALAPPDATA%\berdaya instead of the Unix default
+    # ~/.berdaya. We deliberately do NOT persist HERMES_HOME: an old upstream
+    # Hermes install may own that variable, and overwriting it would redirect
+    # the old app into the berdaya folder. BERDAYA_HOME always wins inside
+    # Berdaya code, so coexistence stays clean.
     $currentBerdayaHome = [Environment]::GetEnvironmentVariable("BERDAYA_HOME", "User")
-    if (-not $currentBerdayaHome) {
-        $currentBerdayaHome = [Environment]::GetEnvironmentVariable("HERMES_HOME", "User")
-    }
     if (-not $currentBerdayaHome -or $currentBerdayaHome -ne $BerdayaHome) {
         [Environment]::SetEnvironmentVariable("BERDAYA_HOME", $BerdayaHome, "User")
-        [Environment]::SetEnvironmentVariable("HERMES_HOME", $BerdayaHome, "User")
         Write-Success "Set BERDAYA_HOME=$BerdayaHome"
     }
     $env:BERDAYA_HOME = $BerdayaHome

@@ -220,32 +220,29 @@ if (INSTALL_STAMP) {
 }
 
 // HERMES_HOME — the user-facing root for everything Berdaya-related. Mirrors
-// scripts/install.ps1's $BerdayaHome and scripts/install.sh's $HERMES_HOME.
+// scripts/install.ps1's $BerdayaHome and scripts/install.sh's $BERDAYA_HOME.
 //
 // Defaults:
-//   Windows: %LOCALAPPDATA%\hermes (matches install.ps1)
-//   macOS / Linux: ~/.hermes (matches install.sh)
+//   Windows: %LOCALAPPDATA%\berdaya (matches install.ps1)
+//   macOS / Linux: ~/.berdaya (matches install.sh)
 //
-// Special case for Windows: if the user has a legacy ~/.hermes directory
-// (e.g., from a prior pip install or a manual setup) AND no
-// %LOCALAPPDATA%\hermes yet, prefer the legacy path so we don't orphan their
-// existing config / sessions / .env. New installs go to %LOCALAPPDATA%.
+// Berdaya Agent is a separate product: we deliberately do NOT honour the
+// legacy HERMES_HOME env var or fall back to an existing ~/.hermes /
+// %LOCALAPPDATA%\hermes directory. A machine with an old Hermes install
+// must end up with a fresh, fully isolated berdaya home (attaching to the
+// old install means a foreign gateway, mismatched session tokens, and 401s).
+// Relocate with BERDAYA_HOME.
 //
 // HERMES_DESKTOP_USER_DATA_DIR (used by test:desktop:fresh) puts the sandbox
-// HERMES_HOME beneath the throwaway userData dir so a fresh-install run never
-// touches the user's real ~/.hermes / %LOCALAPPDATA%\hermes.
+// home beneath the throwaway userData dir so a fresh-install run never
+// touches the user's real ~/.berdaya / %LOCALAPPDATA%\berdaya.
 function resolveHermesHome() {
-  if (process.env.HERMES_HOME) return path.resolve(process.env.HERMES_HOME)
+  if (process.env.BERDAYA_HOME) return path.resolve(process.env.BERDAYA_HOME)
   if (USER_DATA_OVERRIDE) return path.join(path.resolve(USER_DATA_OVERRIDE), 'hermes-home')
   if (IS_WINDOWS && process.env.LOCALAPPDATA) {
-    const localappdata = path.join(process.env.LOCALAPPDATA, 'hermes')
-    const legacy = path.join(app.getPath('home'), '.hermes')
-    // Migrate transparently to LOCALAPPDATA, but honour an existing legacy
-    // ~/.hermes setup (no LOCALAPPDATA install yet) so users don't lose state.
-    if (!directoryExists(localappdata) && directoryExists(legacy)) return legacy
-    return localappdata
+    return path.join(process.env.LOCALAPPDATA, 'berdaya')
   }
-  return path.join(app.getPath('home'), '.hermes')
+  return path.join(app.getPath('home'), '.berdaya')
 }
 
 const HERMES_HOME = resolveHermesHome()
@@ -1190,15 +1187,14 @@ function findGitBash() {
     return findOnPath('bash')
   }
 
-  // install.ps1 drops PortableGit at %LOCALAPPDATA%\hermes\git\... — checked
+  // install.ps1 drops PortableGit at <BerdayaHome>\git\... — checked
   // first so users who installed via install.ps1 are detected before we
   // start probing system-wide locations.
   const localAppData = process.env.LOCALAPPDATA || ''
-  const candidates = []
-  if (localAppData) {
-    candidates.push(path.join(localAppData, 'hermes', 'git', 'bin', 'bash.exe'))
-    candidates.push(path.join(localAppData, 'hermes', 'git', 'usr', 'bin', 'bash.exe'))
-  }
+  const candidates = [
+    path.join(HERMES_HOME, 'git', 'bin', 'bash.exe'),
+    path.join(HERMES_HOME, 'git', 'usr', 'bin', 'bash.exe')
+  ]
 
   // Standard Git for Windows install locations.
   candidates.push(path.join(process.env['ProgramFiles'] || 'C:\\Program Files', 'Git', 'bin', 'bash.exe'))
@@ -1235,11 +1231,10 @@ function resolveGitBinary() {
   }
 
   const localAppData = process.env.LOCALAPPDATA || ''
-  const candidates = []
-  if (localAppData) {
-    candidates.push(path.join(localAppData, 'hermes', 'git', 'cmd', 'git.exe'))
-    candidates.push(path.join(localAppData, 'hermes', 'git', 'bin', 'git.exe'))
-  }
+  const candidates = [
+    path.join(HERMES_HOME, 'git', 'cmd', 'git.exe'),
+    path.join(HERMES_HOME, 'git', 'bin', 'git.exe')
+  ]
   candidates.push(path.join(process.env['ProgramFiles'] || 'C:\\Program Files', 'Git', 'cmd', 'git.exe'))
   candidates.push(path.join(process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)', 'Git', 'cmd', 'git.exe'))
   if (localAppData) {
@@ -1699,6 +1694,7 @@ async function applyUpdates(opts = {}) {
       cwd: HERMES_HOME,
       env: {
         ...process.env,
+        BERDAYA_HOME: HERMES_HOME,
         HERMES_HOME,
         PATH: [path.join(HERMES_HOME, 'node', 'bin'), venvBin, process.env.PATH].filter(Boolean).join(path.delimiter)
       },
@@ -1725,9 +1721,12 @@ async function applyUpdates(opts = {}) {
 // Resolve the hermes CLI to drive an in-app update: prefer the venv shim in
 // the install we're updating, fall back to `hermes` on PATH.
 function resolveHermesCliBinary(updateRoot) {
-  const venvHermes = path.join(updateRoot, 'venv', 'bin', 'hermes')
-  if (fileExists(venvHermes)) return venvHermes
-  return findOnPath('hermes') || null
+  const venvDir = path.join(updateRoot, 'venv', IS_WINDOWS ? 'Scripts' : 'bin')
+  for (const name of IS_WINDOWS ? ['berdaya.exe', 'hermes.exe'] : ['berdaya', 'hermes']) {
+    const candidate = path.join(venvDir, name)
+    if (fileExists(candidate)) return candidate
+  }
+  return findOnPath('berdaya') || null
 }
 
 // Spawn a command and stream each output line to the update progress channel.
@@ -1788,6 +1787,7 @@ async function applyUpdatesPosixInApp() {
     .filter(Boolean)
     .join(path.delimiter)
   const env = {
+    BERDAYA_HOME: HERMES_HOME,
     HERMES_HOME,
     PATH: [extraPath, process.env.PATH].filter(Boolean).join(path.delimiter)
   }
@@ -2185,10 +2185,13 @@ function resolveHermesBackend(dashboardArgs) {
     return createActiveBackend(dashboardArgs)
   }
 
-  // 4. Existing `hermes` on PATH -- installed via install.ps1 / install.sh from
-  //    a previous tool-only setup, or pip-installed system-wide. Use it but
-  //    do NOT write a bootstrap marker; the user did this themselves and we
-  //    don't want to take ownership of an install we didn't perform.
+  // 4. Existing `berdaya` on PATH -- installed via install.ps1 / install.sh
+  //    from a previous tool-only setup. Use it but do NOT write a bootstrap
+  //    marker; the user did this themselves and we don't want to take
+  //    ownership of an install we didn't perform. We look only for `berdaya`
+  //    -- a legacy `hermes` CLI on PATH belongs to the upstream Hermes app
+  //    and must never be adopted as the Berdaya backend (foreign home dir,
+  //    foreign gateway token -> 401s).
   //    HERMES_DESKTOP_IGNORE_EXISTING=1 forces the bootstrap path for testing.
   if (process.env.HERMES_DESKTOP_IGNORE_EXISTING !== '1') {
     let hermesCommand = null
@@ -2204,7 +2207,7 @@ function resolveHermesBackend(dashboardArgs) {
         rememberLog(`Ignoring Windows Berdaya Agent override under WSL: ${hermesOverride}`)
       }
     } else {
-      hermesCommand = findOnPath('hermes')
+      hermesCommand = findOnPath('berdaya')
     }
 
     if (hermesCommand) {
@@ -4549,6 +4552,7 @@ async function spawnPoolBackend(profile, entry) {
     cwd: hermesCwd,
     env: {
       ...process.env,
+      BERDAYA_HOME: HERMES_HOME,
       HERMES_HOME,
       ...backend.env,
       // Pin the gateway's tool/terminal cwd to the same directory we chose for
@@ -4749,14 +4753,15 @@ async function startHermes() {
       cwd: hermesCwd,
       env: {
         ...process.env,
-        // Explicitly pin HERMES_HOME for the child so Python's get_hermes_home()
-        // resolves to the SAME location our resolveHermesHome() picked. Without
-        // this pin, Python falls back to ~/.hermes on every platform — fine on
-        // mac/linux (where our default matches), but on Windows our default is
-        // %LOCALAPPDATA%\hermes, which differs from C:\Users\<u>\.hermes.
-        // Mismatch would split config / sessions / .env / logs across two
-        // directories. install.ps1 sets HERMES_HOME via setx; the desktop
-        // can't reliably do that, so we set it inline for every spawn.
+        // Explicitly pin BERDAYA_HOME + HERMES_HOME for the child so Python's
+        // get_hermes_home() resolves to the SAME location our
+        // resolveHermesHome() picked. Without this pin, a stale system-level
+        // HERMES_HOME left behind by an old upstream Hermes install would
+        // hijack the child into the foreign hermes home — splitting config /
+        // sessions / .env / logs across two directories and producing 401s
+        // against the foreign gateway. We set both vars inline for every
+        // spawn; BERDAYA_HOME wins inside hermes_constants.get_hermes_home().
+        BERDAYA_HOME: HERMES_HOME,
         HERMES_HOME,
         ...backend.env,
         TERMINAL_CWD: hermesCwd,
@@ -5963,7 +5968,7 @@ async function getUninstallSummary() {
     try {
       const child = spawn(py, ['-m', 'hermes_cli.main', 'uninstall', '--gui-summary'], hiddenWindowsChildOptions({
         cwd: agentRoot,
-        env: { ...process.env, HERMES_HOME, NO_COLOR: '1' },
+        env: { ...process.env, BERDAYA_HOME: HERMES_HOME, HERMES_HOME, NO_COLOR: '1' },
         stdio: ['ignore', 'pipe', 'ignore']
       }))
       child.stdout.on('data', chunk => {

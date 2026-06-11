@@ -297,8 +297,10 @@ function spawnPowerShell(scriptPath, args, { emit, stageName, abortSignal, herme
       stdio: ['ignore', 'pipe', 'pipe'],
       env: {
         ...process.env,
-        // Pass HERMES_HOME through so install.ps1 respects the caller's
-        // choice rather than re-computing the default.
+        // Pass BERDAYA_HOME + HERMES_HOME through so install.ps1 respects
+        // the caller's choice rather than re-computing the default (and a
+        // stale system-level HERMES_HOME can't hijack the install).
+        BERDAYA_HOME: hermesHome || process.env.BERDAYA_HOME || '',
         HERMES_HOME: hermesHome || process.env.HERMES_HOME || ''
       }
     }))
@@ -372,6 +374,7 @@ function spawnBash(scriptPath, args, { emit, stageName, abortSignal, hermesHome 
       stdio: ['ignore', 'pipe', 'pipe'],
       env: {
         ...process.env,
+        BERDAYA_HOME: hermesHome || process.env.BERDAYA_HOME || '',
         HERMES_HOME: hermesHome || process.env.HERMES_HOME || ''
       }
     })

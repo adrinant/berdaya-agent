@@ -48,7 +48,9 @@ BOLD='\033[1m'
 # Configuration
 REPO_URL_SSH="git@github.com:adrinant/berdaya-agent.git"
 REPO_URL_HTTPS="https://github.com/adrinant/berdaya-agent.git"
-BERDAYA_HOME="${BERDAYA_HOME:-${HERMES_HOME:-$HOME/.berdaya}}"
+# Only BERDAYA_HOME relocates the install — a legacy HERMES_HOME env var
+# (from an old upstream Hermes install) must not hijack Berdaya's home.
+BERDAYA_HOME="${BERDAYA_HOME:-$HOME/.berdaya}"
 HERMES_HOME="$BERDAYA_HOME"
 export BERDAYA_HOME HERMES_HOME
 # INSTALL_DIR is resolved AFTER arg parsing and OS detection so we can pick an
