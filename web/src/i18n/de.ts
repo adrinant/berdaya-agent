@@ -120,8 +120,8 @@ export const de: Translations = {
     starting: "Startet",
     startedInBackground: "Im Hintergrund gestartet — siehe Protokolle für den Fortschritt",
     stopped: "Gestoppt",
-    updateBerdaya Agent: "Berdaya Agent aktualisieren",
-    updatingBerdaya Agent: "Berdaya Agent wird aktualisiert…",
+    updateHermes: "Berdaya Agent aktualisieren",
+    updatingHermes: "Berdaya Agent wird aktualisiert…",
     waitingForOutput: "Warte auf Ausgabe…",
   },
 

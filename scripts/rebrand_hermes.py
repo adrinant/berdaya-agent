@@ -68,7 +68,7 @@ BINARY_SUFFIXES = {
 PROTECT_PATTERNS = [
     re.compile(r"Berdaya Agent-\d[\w.-]*"),
     re.compile(r"Hermes-4\.\d[\w.-]*"),
-    re.compile(r"\bBerdaya Agent\s+4\b"),
+    re.compile(r"\bHermes\s+4\b"),
     re.compile(r"NousResearch/[Hh]ermes-[Aa]gent"),
     re.compile(r"github\.com/NousResearch/[Hh]ermes-[Aa]gent"),
 ]

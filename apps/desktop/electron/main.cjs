@@ -272,7 +272,7 @@ const BOOTSTRAP_MARKER_SCHEMA_VERSION = 1
 const DESKTOP_CONNECTION_CONFIG_PATH = path.join(app.getPath('userData'), 'connection.json')
 const DESKTOP_UPDATE_CONFIG_PATH = path.join(app.getPath('userData'), 'updates.json')
 // active-profile.json records which Berdaya Agent profile the desktop launches its
-// local backend as. When set, startBerdaya Agent() passes `hermes --profile <name>
+// local backend as. When set, startHermes() passes `hermes --profile <name>
 // dashboard …`, which deterministically pins HERMES_HOME (see
 // _apply_profile_override in hermes_cli/main.py) and bypasses the sticky
 // ~/.hermes/active_profile file. Unset (null) preserves the legacy behavior:
@@ -546,7 +546,7 @@ let hermesProcess = null
 let connectionPromise = null
 // Additional per-profile backends, keyed by profile name. The PRIMARY backend
 // (the desktop's launch profile) stays managed by hermesProcess +
-// connectionPromise + startBerdaya Agent(); this pool only holds EXTRA profile
+// connectionPromise + startHermes(); this pool only holds EXTRA profile
 // backends spawned lazily when a session belongs to a different profile. A user
 // with no named profiles never populates this map, so their experience is
 // byte-for-byte the single-backend behavior.
@@ -570,7 +570,7 @@ const RENDERER_RELOAD_WINDOW_MS = 60_000
 const RENDERER_RELOAD_MAX = 3
 let rendererReloadTimes = []
 // Latched bootstrap failure: when the first-launch install fails, we hold
-// onto the error so subsequent startBerdaya Agent() calls (e.g. the renderer's
+// onto the error so subsequent startHermes() calls (e.g. the renderer's
 // ensureGatewayOpen retrying after the WS won't open) return the same error
 // instead of re-running install.ps1 in a hot loop. Cleared explicitly by
 // the renderer's "Reload and retry" path or by quitting the app.
@@ -1725,8 +1725,8 @@ async function applyUpdates(opts = {}) {
 // Resolve the hermes CLI to drive an in-app update: prefer the venv shim in
 // the install we're updating, fall back to `hermes` on PATH.
 function resolveHermesCliBinary(updateRoot) {
-  const venvBerdaya Agent = path.join(updateRoot, 'venv', 'bin', 'hermes')
-  if (fileExists(venvBerdaya Agent)) return venvBerdaya Agent
+  const venvHermes = path.join(updateRoot, 'venv', 'bin', 'hermes')
+  if (fileExists(venvHermes)) return venvHermes
   return findOnPath('hermes') || null
 }
 
@@ -2373,7 +2373,7 @@ async function ensureRuntime(backend) {
       )
       bootstrapError.isBootstrapFailure = true
       bootstrapError.failedStage = bootstrapResult.failedStage || null
-      // Latch the failure so subsequent startBerdaya Agent() calls return this
+      // Latch the failure so subsequent startHermes() calls return this
       // same error without re-running install.ps1.  Cleared by the
       // hermes:bootstrap:reset IPC (renderer's "Reload and retry").
       bootstrapFailure = bootstrapError
@@ -3106,7 +3106,7 @@ function closePreviewWatchers() {
   }
 }
 
-async function waitForBerdaya Agent(baseUrl, token) {
+async function waitForHermes(baseUrl, token) {
   const deadline = Date.now() + 45_000
   let lastError = null
 
@@ -4331,7 +4331,7 @@ async function testDesktopConnectionConfig(input = {}) {
       token = decryptDesktopSecret(block.token)
     }
   } else {
-    const remote = (await resolveRemoteBackend(key)) || (await startBerdaya Agent())
+    const remote = (await resolveRemoteBackend(key)) || (await startHermes())
     baseUrl = remote.baseUrl
     token = remote.token
     authMode = normAuthMode(remote.authMode)
@@ -4392,7 +4392,7 @@ function resetHermesConnection() {
 
 // Re-home the primary backend: reset connection state, then wait for the live
 // dashboard process to actually exit (SIGKILL after 5s) so the next
-// startBerdaya Agent() spawns fresh instead of racing the dying one. Shared by the
+// startHermes() spawns fresh instead of racing the dying one. Shared by the
 // connection-config and profile switch flows.
 async function teardownPrimaryBackendAndWait() {
   // Capture the reference before resetHermesConnection() nulls hermesProcess.
@@ -4438,14 +4438,14 @@ function primaryProfileKey() {
 }
 
 // Resolve a backend connection for the given profile. Routes the primary
-// profile to startBerdaya Agent() (the window backend: boot UI, bootstrap, remote
+// profile to startHermes() (the window backend: boot UI, bootstrap, remote
 // mode), and any OTHER profile to a lazily-spawned pool backend. An empty /
 // unknown profile resolves to the primary, so all legacy callers are unchanged.
 async function ensureBackend(profile) {
   const key = profile && String(profile).trim() ? String(profile).trim() : primaryProfileKey()
 
   if (key === primaryProfileKey()) {
-    return startBerdaya Agent()
+    return startHermes()
   }
 
   const existing = backendPool.get(key)
@@ -4514,7 +4514,7 @@ function startPoolIdleReaper() {
 }
 
 // Spawn an additional dashboard backend pinned to a named profile. Mirrors the
-// local-spawn portion of startBerdaya Agent() but without the boot-progress UI,
+// local-spawn portion of startHermes() but without the boot-progress UI,
 // bootstrap, or remote handling (those belong to the primary backend only).
 async function spawnPoolBackend(profile, entry) {
   // A profile may point at its OWN remote backend (connection.json
@@ -4525,7 +4525,7 @@ async function spawnPoolBackend(profile, entry) {
   // tolerate.
   const remote = await resolveRemoteBackend(profile)
   if (remote) {
-    await waitForBerdaya Agent(remote.baseUrl, remote.token)
+    await waitForHermes(remote.baseUrl, remote.token)
     return {
       ...remote,
       profile,
@@ -4592,7 +4592,7 @@ async function spawnPoolBackend(profile, entry) {
   })
 
   const baseUrl = `http://127.0.0.1:${port}`
-  await Promise.race([waitForBerdaya Agent(baseUrl, token), startFailed])
+  await Promise.race([waitForHermes(baseUrl, token), startFailed])
   ready = true
 
   return {
@@ -4685,9 +4685,9 @@ async function prepareProfileDeleteRequest(request) {
   await teardownPoolBackendAndWait(profile)
 }
 
-async function startBerdaya Agent() {
+async function startHermes() {
   // Latched-failure short-circuit: once bootstrap has failed in this
-  // process, every subsequent startBerdaya Agent() call re-throws the same error
+  // process, every subsequent startHermes() call re-throws the same error
   // without re-running install.ps1. This prevents the renderer's
   // ensureGatewayOpen retries (and any other getConnection callers) from
   // restarting a 5-10 minute install loop while the user is still reading
@@ -4704,7 +4704,7 @@ async function startBerdaya Agent() {
     const remote = await resolveRemoteBackend(primaryProfileKey())
     if (remote) {
       await advanceBootProgress('backend.remote', `Connecting to remote Berdaya Agent backend at ${remote.baseUrl}`, 24)
-      await waitForBerdaya Agent(remote.baseUrl, remote.token)
+      await waitForHermes(remote.baseUrl, remote.token)
       updateBootProgress({
         phase: 'backend.ready',
         message: 'Remote Berdaya Agent backend is ready',
@@ -4819,7 +4819,7 @@ async function startBerdaya Agent() {
 
     const baseUrl = `http://127.0.0.1:${port}`
     await advanceBootProgress('backend.wait', 'Waiting for Berdaya Agent backend to become ready', 90)
-    await Promise.race([waitForBerdaya Agent(baseUrl, token), backendStartFailed])
+    await Promise.race([waitForHermes(baseUrl, token), backendStartFailed])
     backendReady = true
     updateBootProgress({
       phase: 'backend.ready',
@@ -5062,7 +5062,7 @@ function createWindow() {
     restorePersistedZoomLevel(mainWindow)
     broadcastBootProgress()
     sendWindowStateChanged()
-    startBerdaya Agent().catch(error => rememberLog(error.stack || error.message))
+    startHermes().catch(error => rememberLog(error.stack || error.message))
   })
 }
 
@@ -5122,7 +5122,7 @@ ipcMain.handle('hermes:window:openSession', async (_event, sessionId) => {
 })
 ipcMain.handle('hermes:bootstrap:reset', async () => {
   // Renderer's "Reload and retry" path. Clear the latched failure and
-  // reset connection state so the next startBerdaya Agent() call restarts the
+  // reset connection state so the next startHermes() call restarts the
   // full backend flow (including a fresh runBootstrap pass).
   rememberLog('[bootstrap] reset requested by renderer; clearing latched failure')
   bootstrapFailure = null
@@ -5141,7 +5141,7 @@ ipcMain.handle('hermes:bootstrap:reset', async () => {
 })
 ipcMain.handle('hermes:bootstrap:repair', async () => {
   // Forceful repair: drop the bootstrap-complete marker so the next
-  // startBerdaya Agent() re-runs the full installer (refreshing a broken/partial
+  // startHermes() re-runs the full installer (refreshing a broken/partial
   // venv), and clear any latched failure + live connection. The renderer
   // reloads afterwards to re-drive the boot flow from scratch.
   rememberLog('[bootstrap] repair requested by renderer; clearing marker + latched failure')

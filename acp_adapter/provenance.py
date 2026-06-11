@@ -91,14 +91,14 @@ def build_session_provenance(
 
     provenance: Dict[str, Any] = {
         "acpSessionId": acp_session_id,
-        "currentBerdaya AgentSessionId": current_hermes_session_id,
-        "rootBerdaya AgentSessionId": root_id,
-        "parentBerdaya AgentSessionId": parent_id,
+        "currentHermesSessionId": current_hermes_session_id,
+        "rootHermesSessionId": root_id,
+        "parentHermesSessionId": parent_id,
         "sessionKind": "continuation" if is_continuation else "root",
         "compressionDepth": compression_depth,
     }
     if previous_hermes_session_id:
-        provenance["previousBerdaya AgentSessionId"] = previous_hermes_session_id
+        provenance["previousHermesSessionId"] = previous_hermes_session_id
     if rotated:
         # The head moved during the last turn. The only mechanism that rotates
         # the internal id mid-turn is compression-driven session splitting.

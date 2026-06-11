@@ -120,8 +120,8 @@ export const ko: Translations = {
     starting: "시작 중",
     startedInBackground: "백그라운드에서 시작됨 — 진행 상황은 로그를 확인하세요",
     stopped: "중지됨",
-    updateBerdaya Agent: "Berdaya Agent 업데이트",
-    updatingBerdaya Agent: "Berdaya Agent 업데이트 중…",
+    updateHermes: "Berdaya Agent 업데이트",
+    updatingHermes: "Berdaya Agent 업데이트 중…",
     waitingForOutput: "출력 대기 중…",
   },
 

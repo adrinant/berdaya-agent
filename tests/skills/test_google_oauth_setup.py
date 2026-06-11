@@ -258,7 +258,7 @@ class TestExchangeAuthCode:
         assert not setup_module.PENDING_AUTH_PATH.exists()
 
 
-class TestBerdaya AgentConstantsFallback:
+class TestHermesConstantsFallback:
     """Tests for _hermes_home.py fallback when hermes_constants is unavailable."""
 
     HELPER_PATH = (

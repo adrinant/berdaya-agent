@@ -4,12 +4,12 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from cli import Berdaya AgentCLI
+from cli import HermesCLI
 from hermes_cli.commands import resolve_command
 
 
 def _make_cli():
-    cli_obj = Berdaya AgentCLI.__new__(Berdaya AgentCLI)
+    cli_obj = HermesCLI.__new__(HermesCLI)
     cli_obj.config = {}
     cli_obj.console = MagicMock()
     cli_obj.agent = None

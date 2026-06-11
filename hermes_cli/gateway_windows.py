@@ -49,7 +49,7 @@ _FALLBACK_PATTERNS = re.compile(
 )
 _ACCESS_DENIED_PATTERN = re.compile(r"(access is denied|acceso denegado)", re.IGNORECASE)
 
-_TASK_NAME_DEFAULT = "Berdaya Agent_Gateway"
+_TASK_NAME_DEFAULT = "Hermes_Gateway"
 _TASK_DESCRIPTION = "Berdaya Agent Gateway - Messaging Platform Integration"
 
 
@@ -251,8 +251,8 @@ def _launch_elevated_uninstall() -> bool:
 def get_task_name() -> str:
     """Scheduled Task name, scoped per profile.
 
-    Default profile: ``Berdaya Agent_Gateway``
-    Named profile X: ``Berdaya Agent_Gateway_<X>``
+    Default profile: ``Hermes_Gateway``
+    Named profile X: ``Hermes_Gateway_<X>``
     """
     _assert_windows()
     # Local import to avoid circular module initialization during hermes_cli boot.

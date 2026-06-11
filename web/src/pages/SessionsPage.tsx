@@ -1290,7 +1290,7 @@ export default function SessionsPage() {
               <span className="text-xs font-mondwest tracking-[0.12em] truncate">
                 {activeAction === "restart"
                   ? t.status.restartGateway
-                  : t.status.updateBerdaya Agent}
+                  : t.status.updateHermes}
               </span>
 
               <Badge

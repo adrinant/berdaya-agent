@@ -1,9 +1,9 @@
 """Tests for OAuth server metadata persistence across process restarts.
 
 Covers:
-- :class:`Berdaya AgentTokenStorage` ``.meta.json`` roundtrip (save / load / remove)
+- :class:`HermesTokenStorage` ``.meta.json`` roundtrip (save / load / remove)
 - The production manager provider
-  (:class:`tools.mcp_oauth_manager.Berdaya AgentMCPOAuthProvider`) restoring metadata
+  (:class:`tools.mcp_oauth_manager.HermesMCPOAuthProvider`) restoring metadata
   on cold-load init and persisting metadata at the end of ``async_auth_flow``.
 
 Context
@@ -26,7 +26,7 @@ import pytest
 
 from mcp.shared.auth import OAuthMetadata
 
-from tools.mcp_oauth import Berdaya AgentTokenStorage
+from tools.mcp_oauth import HermesTokenStorage
 from tools.mcp_oauth_manager import _HERMES_PROVIDER_CLS
 
 
@@ -42,14 +42,14 @@ def _make_metadata(token_endpoint: str = "https://auth.example.com/oauth/token")
 
 
 # ---------------------------------------------------------------------------
-# Berdaya AgentTokenStorage metadata roundtrip
+# HermesTokenStorage metadata roundtrip
 # ---------------------------------------------------------------------------
 
 
 class TestMetadataStorage:
     def test_save_and_load_roundtrip(self, tmp_path, monkeypatch):
         monkeypatch.setenv("HERMES_HOME", str(tmp_path))
-        storage = Berdaya AgentTokenStorage("example-server")
+        storage = HermesTokenStorage("example-server")
 
         meta = _make_metadata()
         storage.save_oauth_metadata(meta)
@@ -64,12 +64,12 @@ class TestMetadataStorage:
 
     def test_load_missing_returns_none(self, tmp_path, monkeypatch):
         monkeypatch.setenv("HERMES_HOME", str(tmp_path))
-        storage = Berdaya AgentTokenStorage("nonexistent")
+        storage = HermesTokenStorage("nonexistent")
         assert storage.load_oauth_metadata() is None
 
     def test_load_corrupt_returns_none(self, tmp_path, monkeypatch):
         monkeypatch.setenv("HERMES_HOME", str(tmp_path))
-        storage = Berdaya AgentTokenStorage("corrupt-server")
+        storage = HermesTokenStorage("corrupt-server")
 
         # Write something that doesn't validate as OAuthMetadata
         meta_path = storage._meta_path()
@@ -80,7 +80,7 @@ class TestMetadataStorage:
 
     def test_remove_deletes_meta_file(self, tmp_path, monkeypatch):
         monkeypatch.setenv("HERMES_HOME", str(tmp_path))
-        storage = Berdaya AgentTokenStorage("cleanup-server")
+        storage = HermesTokenStorage("cleanup-server")
 
         storage.save_oauth_metadata(_make_metadata())
         assert storage._meta_path().exists()
@@ -90,11 +90,11 @@ class TestMetadataStorage:
 
 
 # ---------------------------------------------------------------------------
-# Manager-path provider (Berdaya AgentMCPOAuthProvider) — production code path
+# Manager-path provider (HermesMCPOAuthProvider) — production code path
 # ---------------------------------------------------------------------------
 
 
-def _manager_provider_with_context(storage: Berdaya AgentTokenStorage, **context_attrs):
+def _manager_provider_with_context(storage: HermesTokenStorage, **context_attrs):
     """Build an uninitialized manager provider with a mocked context.
 
     Bypasses the full OAuthClientProvider init so we can exercise the
@@ -118,7 +118,7 @@ class TestManagerOAuthProviderMetadata:
     def test_initialize_restores_metadata_from_disk(self, tmp_path, monkeypatch):
         """Cold-load: if we have no in-memory metadata but disk has some, restore it."""
         monkeypatch.setenv("HERMES_HOME", str(tmp_path))
-        storage = Berdaya AgentTokenStorage("mgr-srv")
+        storage = HermesTokenStorage("mgr-srv")
         storage.save_oauth_metadata(_make_metadata("https://mgr.example.com/token"))
         provider = _manager_provider_with_context(storage, oauth_metadata=None)
 
@@ -134,7 +134,7 @@ class TestManagerOAuthProviderMetadata:
     def test_initialize_skips_restore_when_in_memory_present(self, tmp_path, monkeypatch):
         """If SDK already has metadata in memory, don't overwrite from disk."""
         monkeypatch.setenv("HERMES_HOME", str(tmp_path))
-        storage = Berdaya AgentTokenStorage("mgr-srv2")
+        storage = HermesTokenStorage("mgr-srv2")
         storage.save_oauth_metadata(_make_metadata("https://disk.example.com/token"))
         in_memory = _make_metadata("https://memory.example.com/token")
 
@@ -151,7 +151,7 @@ class TestManagerOAuthProviderMetadata:
     def test_persist_metadata_if_changed_writes_on_first_discover(self, tmp_path, monkeypatch):
         """When nothing on disk yet, persist what the SDK discovered in-memory."""
         monkeypatch.setenv("HERMES_HOME", str(tmp_path))
-        storage = Berdaya AgentTokenStorage("persist-srv")
+        storage = HermesTokenStorage("persist-srv")
         assert storage.load_oauth_metadata() is None
 
         discovered = _make_metadata("https://discovered.example.com/token")
@@ -166,14 +166,14 @@ class TestManagerOAuthProviderMetadata:
     def test_persist_metadata_noop_when_unchanged(self, tmp_path, monkeypatch):
         """No-op write when disk already matches in-memory metadata."""
         monkeypatch.setenv("HERMES_HOME", str(tmp_path))
-        storage = Berdaya AgentTokenStorage("noop-srv")
+        storage = HermesTokenStorage("noop-srv")
         meta = _make_metadata("https://same.example.com/token")
         storage.save_oauth_metadata(meta)
 
         provider = _manager_provider_with_context(storage, oauth_metadata=meta)
 
         with patch.object(
-            Berdaya AgentTokenStorage, "save_oauth_metadata"
+            HermesTokenStorage, "save_oauth_metadata"
         ) as save_spy:
             provider._persist_oauth_metadata_if_changed()
             save_spy.assert_not_called()
@@ -181,7 +181,7 @@ class TestManagerOAuthProviderMetadata:
     def test_async_auth_flow_persists_on_completion(self, tmp_path, monkeypatch):
         """End-to-end: running the wrapped auth_flow persists discovered metadata."""
         monkeypatch.setenv("HERMES_HOME", str(tmp_path))
-        storage = Berdaya AgentTokenStorage("flow-srv")
+        storage = HermesTokenStorage("flow-srv")
         provider = _manager_provider_with_context(
             storage,
             oauth_metadata=_make_metadata("https://flow.example.com/token"),

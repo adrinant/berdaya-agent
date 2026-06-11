@@ -1417,7 +1417,7 @@ class TestWebServerEndpoints:
         assert kwargs["headers"]["Accept"] == "application/json"
         assert kwargs["headers"]["Authorization"] == "Bearer poll-secret"
         assert kwargs["headers"]["Content-Type"] == "application/json"
-        assert kwargs["headers"]["User-Agent"].startswith("Berdaya AgentDashboard/")
+        assert kwargs["headers"]["User-Agent"].startswith("HermesDashboard/")
 
     def test_telegram_onboarding_worker_request_maps_unexpected_errors(
         self, monkeypatch
@@ -1453,8 +1453,8 @@ class TestWebServerEndpoints:
                 "pairing_id": "pair123",
                 "poll_token": "poll-secret",
                 "suggested_username": "hermes_pair123_bot",
-                "deep_link": "https://t.me/newbot/Berdaya AgentSetupBot/hermes_pair123_bot",
-                "qr_payload": "https://t.me/newbot/Berdaya AgentSetupBot/hermes_pair123_bot",
+                "deep_link": "https://t.me/newbot/HermesSetupBot/hermes_pair123_bot",
+                "qr_payload": "https://t.me/newbot/HermesSetupBot/hermes_pair123_bot",
                 "expires_at": "2027-05-18T00:00:00.000Z",
             }
 
@@ -1491,8 +1491,8 @@ class TestWebServerEndpoints:
                     "pairing_id": "pair-ready",
                     "poll_token": "poll-secret",
                     "suggested_username": "hermes_pair_ready_bot",
-                    "deep_link": "https://t.me/newbot/Berdaya AgentSetupBot/hermes_pair_ready_bot",
-                    "qr_payload": "https://t.me/newbot/Berdaya AgentSetupBot/hermes_pair_ready_bot",
+                    "deep_link": "https://t.me/newbot/HermesSetupBot/hermes_pair_ready_bot",
+                    "qr_payload": "https://t.me/newbot/HermesSetupBot/hermes_pair_ready_bot",
                     "expires_at": "2027-05-18T00:00:00.000Z",
                 }
             assert method == "GET"
@@ -1564,8 +1564,8 @@ class TestWebServerEndpoints:
                     "pairing_id": "pair-restart-fails",
                     "poll_token": "poll-secret",
                     "suggested_username": "hermes_pair_restart_fails_bot",
-                    "deep_link": "https://t.me/newbot/Berdaya AgentSetupBot/hermes_pair_restart_fails_bot",
-                    "qr_payload": "https://t.me/newbot/Berdaya AgentSetupBot/hermes_pair_restart_fails_bot",
+                    "deep_link": "https://t.me/newbot/HermesSetupBot/hermes_pair_restart_fails_bot",
+                    "qr_payload": "https://t.me/newbot/HermesSetupBot/hermes_pair_restart_fails_bot",
                     "expires_at": "2027-05-18T00:00:00.000Z",
                 }
             assert method == "GET"
@@ -1628,8 +1628,8 @@ class TestWebServerEndpoints:
                     "pairing_id": "pair-reuse",
                     "poll_token": "poll-secret",
                     "suggested_username": "hermes_pair_reuse_bot",
-                    "deep_link": "https://t.me/newbot/Berdaya AgentSetupBot/hermes_pair_reuse_bot",
-                    "qr_payload": "https://t.me/newbot/Berdaya AgentSetupBot/hermes_pair_reuse_bot",
+                    "deep_link": "https://t.me/newbot/HermesSetupBot/hermes_pair_reuse_bot",
+                    "qr_payload": "https://t.me/newbot/HermesSetupBot/hermes_pair_reuse_bot",
                     "expires_at": "2027-05-18T00:00:00.000Z",
                 }
             return {
@@ -1681,8 +1681,8 @@ class TestWebServerEndpoints:
                 "pairing_id": "pair-waiting",
                 "poll_token": "poll-secret",
                 "suggested_username": "hermes_pair_waiting_bot",
-                "deep_link": "https://t.me/newbot/Berdaya AgentSetupBot/hermes_pair_waiting_bot",
-                "qr_payload": "https://t.me/newbot/Berdaya AgentSetupBot/hermes_pair_waiting_bot",
+                "deep_link": "https://t.me/newbot/HermesSetupBot/hermes_pair_waiting_bot",
+                "qr_payload": "https://t.me/newbot/HermesSetupBot/hermes_pair_waiting_bot",
                 "expires_at": "2027-05-18T00:00:00.000Z",
             }
 
@@ -1710,8 +1710,8 @@ class TestWebServerEndpoints:
                 "pairing_id": "pair-cancel",
                 "poll_token": "poll-secret",
                 "suggested_username": "hermes_pair_cancel_bot",
-                "deep_link": "https://t.me/newbot/Berdaya AgentSetupBot/hermes_pair_cancel_bot",
-                "qr_payload": "https://t.me/newbot/Berdaya AgentSetupBot/hermes_pair_cancel_bot",
+                "deep_link": "https://t.me/newbot/HermesSetupBot/hermes_pair_cancel_bot",
+                "qr_payload": "https://t.me/newbot/HermesSetupBot/hermes_pair_cancel_bot",
                 "expires_at": "2027-05-18T00:00:00.000Z",
             }
 

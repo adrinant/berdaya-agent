@@ -443,7 +443,7 @@ def _content_blocks_to_openai_user_content(
     return parts
 
 
-class Berdaya AgentACPAgent(acp.Agent):
+class HermesACPAgent(acp.Agent):
     """ACP Agent implementation wrapping Berdaya Agent AIAgent."""
 
     _SLASH_COMMANDS = {

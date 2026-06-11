@@ -2213,7 +2213,7 @@ class TestDockerAwareGateway:
         assert "hermes gateway run" in out
 
 
-class TestLegacyBerdaya AgentUnitDetection:
+class TestLegacyHermesUnitDetection:
     """Tests for _find_legacy_hermes_units / has_legacy_hermes_units.
 
     These guard against the scenario that tripped Luis in April 2026: an
@@ -2400,7 +2400,7 @@ class TestLegacyBerdaya AgentUnitDetection:
         assert results == []
 
 
-class TestRemoveLegacyBerdaya AgentUnits:
+class TestRemoveLegacyHermesUnits:
     """Tests for remove_legacy_hermes_units (the migration action)."""
 
     _OUR_UNIT_TEXT = (

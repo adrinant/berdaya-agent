@@ -906,8 +906,8 @@ function SidebarSystemActions({
     {
       action: "update",
       icon: Download,
-      label: t.status.updateBerdaya Agent,
-      runningLabel: t.status.updatingBerdaya Agent,
+      label: t.status.updateHermes,
+      runningLabel: t.status.updatingHermes,
       spin: false,
     },
   ];

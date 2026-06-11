@@ -120,8 +120,8 @@ export const hu: Translations = {
     starting: "Indul",
     startedInBackground: "Háttérben elindítva — kövesse a naplókat a folyamathoz",
     stopped: "Leállítva",
-    updateBerdaya Agent: "Berdaya Agent frissítése",
-    updatingBerdaya Agent: "Berdaya Agent frissítése…",
+    updateHermes: "Berdaya Agent frissítése",
+    updatingHermes: "Berdaya Agent frissítése…",
     waitingForOutput: "Várakozás a kimenetre…",
   },
 
@@ -504,7 +504,7 @@ export const hu: Translations = {
       highest_tier: "Legmagasabb szint",
       highest_tier_hint: "Copper → Silver → Gold → Diamond → Olympian",
       latest: "Legutóbbi",
-      latest_hint_empty: "futtasd többet a Berdaya Agentt",
+      latest_hint_empty: "futtasd többet a Berdaya Agentet",
       none_yet: "Még semmi",
     },
     state: {

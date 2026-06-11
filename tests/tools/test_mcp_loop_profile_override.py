@@ -57,7 +57,7 @@ def test_override_propagates_to_mcp_loop(tmp_path, monkeypatch, mcp_loop):
 
 
 def test_oauth_token_paths_follow_override(tmp_path, monkeypatch, mcp_loop):
-    """The actual symptom path: Berdaya AgentTokenStorage resolving inside the
+    """The actual symptom path: HermesTokenStorage resolving inside the
     probe's MCP-loop coroutine must land in the selected profile's
     mcp-tokens dir, not the process home's."""
     from hermes_constants import (
@@ -72,9 +72,9 @@ def test_oauth_token_paths_follow_override(tmp_path, monkeypatch, mcp_loop):
     monkeypatch.setenv("HERMES_HOME", str(process_home))
 
     async def token_path():
-        from tools.mcp_oauth import Berdaya AgentTokenStorage
+        from tools.mcp_oauth import HermesTokenStorage
 
-        return str(Berdaya AgentTokenStorage("probe-srv")._tokens_path())
+        return str(HermesTokenStorage("probe-srv")._tokens_path())
 
     token = set_hermes_home_override(str(profile_home))
     try:

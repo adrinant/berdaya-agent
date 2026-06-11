@@ -732,7 +732,7 @@ class TestBuildContextFilesPrompt:
 # =========================================================================
 
 
-class TestFindBerdaya AgentMd:
+class TestFindHermesMd:
     def test_finds_in_cwd(self, tmp_path):
         (tmp_path / ".hermes.md").write_text("rules")
         assert _find_hermes_md(tmp_path) == tmp_path / ".hermes.md"

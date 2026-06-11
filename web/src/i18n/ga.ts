@@ -120,8 +120,8 @@ export const ga: Translations = {
     starting: "Ag tosú",
     startedInBackground: "Tosaithe sa chúlra — seiceáil na logaí le haghaidh dul chun cinn",
     stopped: "Stoptha",
-    updateBerdaya Agent: "Nuashonraigh Berdaya Agent",
-    updatingBerdaya Agent: "Ag nuashonrú Berdaya Agent…",
+    updateHermes: "Nuashonraigh Berdaya Agent",
+    updatingHermes: "Ag nuashonrú Berdaya Agent…",
     waitingForOutput: "Ag fanacht le haschur…",
   },
 

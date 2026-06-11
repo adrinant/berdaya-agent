@@ -120,8 +120,8 @@ export const ru: Translations = {
     starting: "Запуск",
     startedInBackground: "Запущено в фоне — следите за журналами",
     stopped: "Остановлено",
-    updateBerdaya Agent: "Обновить Berdaya Agent",
-    updatingBerdaya Agent: "Обновление Berdaya Agent…",
+    updateHermes: "Обновить Berdaya Agent",
+    updatingHermes: "Обновление Berdaya Agent…",
     waitingForOutput: "Ожидание вывода…",
   },
 

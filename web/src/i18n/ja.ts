@@ -120,8 +120,8 @@ export const ja: Translations = {
     starting: "起動中",
     startedInBackground: "バックグラウンドで起動しました — 進行状況はログをご確認ください",
     stopped: "停止",
-    updateBerdaya Agent: "Berdaya Agent を更新",
-    updatingBerdaya Agent: "Berdaya Agent を更新しています…",
+    updateHermes: "Berdaya Agent を更新",
+    updatingHermes: "Berdaya Agent を更新しています…",
     waitingForOutput: "出力を待機しています…",
   },
 

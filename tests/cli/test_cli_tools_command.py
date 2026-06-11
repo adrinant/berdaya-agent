@@ -2,12 +2,12 @@
 
 from unittest.mock import MagicMock, patch
 
-from cli import Berdaya AgentCLI
+from cli import HermesCLI
 
 
 def _make_cli(enabled_toolsets=None):
-    """Build a minimal Berdaya AgentCLI stub without running __init__."""
-    cli_obj = Berdaya AgentCLI.__new__(Berdaya AgentCLI)
+    """Build a minimal HermesCLI stub without running __init__."""
+    cli_obj = HermesCLI.__new__(HermesCLI)
     cli_obj.enabled_toolsets = set(enabled_toolsets or ["web", "memory"])
     cli_obj._command_running = False
     cli_obj.console = MagicMock()

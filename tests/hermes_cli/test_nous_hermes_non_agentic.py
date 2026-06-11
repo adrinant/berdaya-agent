@@ -32,7 +32,7 @@ from hermes_cli.model_switch import (
         "hermes_4_70b",
         "openrouter/hermes3:70b",
         "openrouter/nousresearch/hermes-4-405b",
-        "NousResearch/Berdaya Agent3",
+        "NousResearch/Hermes3",
         "hermes-3.1",
     ],
 )

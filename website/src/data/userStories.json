@@ -95,7 +95,7 @@
     "date": "2026-03-22",
     "category": "privacy",
     "headline": "Sharing a local SearXNG container across my Berdaya Agent agents",
-    "quote": "I set up my Berdaya Agents with local SearXNG (in a container that they share) before ddgs (duckduckgo) was added, because I thought all API use of DDG was paid. I've been pretty happy with searxng so far.",
+    "quote": "I set up my Hermes Agents with local SearXNG (in a container that they share) before ddgs (duckduckgo) was added, because I thought all API use of DDG was paid. I've been pretty happy with searxng so far.",
     "size": "sm"
   },
   {
@@ -2357,11 +2357,11 @@
     "id": "discord-misswuhanliang-translator-extension",
     "source": "discord",
     "author": "@misswuhanliang",
-    "url": "https://github.com/teknium1/nous-discord-archive/blob/main/archives/community-projects-showcase/1484856405424078980-Berdaya AgentAI-Translator.txt",
+    "url": "https://github.com/teknium1/nous-discord-archive/blob/main/archives/community-projects-showcase/1484856405424078980-HermesAI-Translator.txt",
     "date": "",
     "category": "content-creation",
     "headline": "Built a browser extension for translation and summarization on Hermes-4-70B",
-    "quote": "I've developed and released Berdaya AgentAI Translator, an open-source, AI-powered browser extension for seamless translation, reading assistance, text polishing, and summarization directly within the browser, driven by Hermes-4-70B.",
+    "quote": "I've developed and released HermesAI Translator, an open-source, AI-powered browser extension for seamless translation, reading assistance, text polishing, and summarization directly within the browser, driven by Hermes-4-70B.",
     "size": "sm"
   },
   {

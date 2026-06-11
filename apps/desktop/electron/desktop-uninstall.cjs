@@ -86,7 +86,7 @@ function resolveRemovableAppPath(execPath, platform, env = {}) {
   if (platform === 'win32') {
     // NSIS per-user installs Berdaya Agent.exe directly in the install dir.
     const dir = p.dirname(exe)
-    if (/[\\/]Berdaya Agent$/i.test(dir) || /[\\/]hermes-desktop$/i.test(dir)) return dir
+    if (/[\\/]Hermes$/i.test(dir) || /[\\/]hermes-desktop$/i.test(dir)) return dir
     return null
   }
 
