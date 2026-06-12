@@ -36,8 +36,8 @@
     "category": "DeveloperTool",
     "shortDescription": "Berdaya Agent",
     "longDescription": "Installs Berdaya Agent on your machine. Drives scripts/install.ps1 (Windows) and scripts/install.sh (macOS/Linux).",
-    "publisher": "Nous Research",
-    "copyright": "Copyright © 2026 Nous Research",
+    "publisher": "Berdaya AI",
+    "copyright": "Copyright © 2026 Berdaya AI",
     "targets": [
       "app",
       "dmg",

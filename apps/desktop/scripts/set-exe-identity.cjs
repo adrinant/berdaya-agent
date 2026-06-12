@@ -70,8 +70,8 @@ async function stampExeIdentity(exe, desktopRoot = path.resolve(__dirname, '..')
     'version-string': {
       ProductName: 'Berdaya Agent',
       FileDescription: 'Berdaya Agent',
-      CompanyName: 'Nous Research',
-      LegalCopyright: 'Copyright (c) 2026 Nous Research'
+      CompanyName: 'Berdaya AI',
+      LegalCopyright: 'Copyright (c) 2026 Berdaya AI'
     }
   })
 

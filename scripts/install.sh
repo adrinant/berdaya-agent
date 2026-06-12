@@ -458,7 +458,7 @@ detect_os() {
             OS="windows"
             DISTRO="windows"
             log_error "Windows detected. Please use the PowerShell installer:"
-            log_info "  iex (irm https://hermes-agent.nousresearch.com/install.ps1)"
+            log_info "  iex (irm https://raw.githubusercontent.com/adrinant/berdaya-agent/main/scripts/install.ps1)"
             exit 1
             ;;
         *)

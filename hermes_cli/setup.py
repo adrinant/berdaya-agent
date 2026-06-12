@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).parent.parent.resolve()
 
-_DOCS_BASE = "https://hermes-agent.nousresearch.com/docs"
+_DOCS_BASE = "https://github.com/adrinant/berdaya-agent"
 
 
 def _model_config_dict(config: Dict[str, Any]) -> Dict[str, Any]:
@@ -1820,7 +1820,7 @@ def _setup_slack():
     print_info("   3. Install to Workspace: Settings → Install App")
     print_info("   4. After installing, invite the bot to channels: /invite @YourBot")
     print()
-    print_info("   Full guide: https://hermes-agent.nousresearch.com/docs/user-guide/messaging/slack/")
+    print_info("   Full guide: https://github.com/adrinant/berdaya-agent")
     print()
 
     # Generate and write manifest up-front so the user can paste it into
@@ -2107,7 +2107,7 @@ def _setup_webhooks():
     print_warning("   internet. For security, run the gateway in a sandboxed environment")
     print_warning("   (Docker, VM, etc.) to limit blast radius from prompt injection.")
     print()
-    print_info("   Full guide: https://hermes-agent.nousresearch.com/docs/user-guide/messaging/webhooks/")
+    print_info("   Full guide: https://github.com/adrinant/berdaya-agent")
     print()
 
     port = prompt("Webhook port (default 8644)")
@@ -2134,7 +2134,7 @@ def _setup_webhooks():
     print_info("      http://your-server:8644/webhooks/<route-name>")
     print()
     print_info("   Route configuration guide:")
-    print_info("   https://hermes-agent.nousresearch.com/docs/user-guide/messaging/webhooks/#configuring-routes")
+    print_info("   https://github.com/adrinant/berdaya-agent")
     print()
     print_info("   Open config in your editor:  hermes config edit")
     print_info("   Open config in your editor:  hermes config edit")
@@ -2946,9 +2946,10 @@ def run_setup_wizard(args):
         )
         return
 
-    # --portal: one-shot Nous Portal setup. Skips the rest of the wizard.
+    # --portal: Nous Portal is not offered in the Berdaya Agent distribution.
     if bool(getattr(args, "portal", False)):
-        _run_portal_one_shot(config)
+        print_warning("Nous Portal setup is not available in Berdaya Agent.")
+        print_info("Run 'berdaya setup model' to configure a provider with your API key or OAuth.")
         return
 
     # Check if a specific section was requested
@@ -3063,18 +3064,7 @@ def run_setup_wizard(args):
         if migration_ran:
             config = load_config()
 
-        setup_mode = prompt_choice(
-            "How would you like to set up Berdaya Agent?",
-            [
-                "Quick Setup (Nous Portal) — free OAuth login, no API keys, model + tools (recommended)",
-                "Full setup — configure every provider, tool & option yourself (bring your own keys)",
-            ],
-            0,
-        )
-
-        if setup_mode == 0:
-            _run_first_time_quick_setup(config, hermes_home, is_existing)
-            return
+        # First-time setup: full wizard (Nous Portal quick path not offered).
 
     # ── Full Setup — run all sections ──
     print_header("Configuration Location")

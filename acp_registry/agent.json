@@ -2,10 +2,10 @@
   "id": "hermes-agent",
   "name": "Berdaya Agent",
   "version": "0.16.0",
-  "description": "Self-improving open-source AI agent by Nous Research with ACP editor integration, persistent memory, skills, and rich tool support.",
-  "repository": "https://github.com/NousResearch/hermes-agent",
-  "website": "https://hermes-agent.nousresearch.com/docs/user-guide/features/acp",
-  "authors": ["Nous Research"],
+  "description": "Self-improving open-source AI agent by Berdaya AI with ACP editor integration, persistent memory, skills, and rich tool support.",
+  "repository": "https://github.com/adrinant/berdaya-agent",
+  "website": "https://github.com/adrinant/berdaya-agent",
+  "authors": ["Berdaya AI"],
   "license": "MIT",
   "distribution": {
     "uvx": {
