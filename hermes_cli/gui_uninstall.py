@@ -40,7 +40,7 @@ import shutil
 import sys
 from pathlib import Path
 
-from hermes_constants import get_hermes_home
+from hermes_constants import get_agent_install_dir, get_hermes_home
 
 from hermes_cli.colors import Colors, color
 
@@ -64,7 +64,7 @@ def log_warn(msg: str):
 
 def _agent_root(hermes_home: Path) -> Path:
     """The agent checkout root — same layout install.sh / install.ps1 use."""
-    return hermes_home / "hermes-agent"
+    return get_agent_install_dir(hermes_home)
 
 
 def desktop_userdata_dir() -> Path:

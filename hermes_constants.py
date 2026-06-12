@@ -507,3 +507,50 @@ FINISH_REASON_LENGTH = "length"
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 OPENROUTER_MODELS_URL = f"{OPENROUTER_BASE_URL}/models"
+
+# Checkout directory under HERMES_HOME (git clone + venv). Product code still
+# ships as the ``hermes-agent`` pip package; only the on-disk folder was renamed.
+AGENT_INSTALL_DIR_NAME = "berdaya-agent"
+LEGACY_AGENT_INSTALL_DIR_NAME = "hermes-agent"
+_ROOT_INSTALL_DIR_NAMES = frozenset({AGENT_INSTALL_DIR_NAME, LEGACY_AGENT_INSTALL_DIR_NAME})
+
+# Inference / OAuth providers hidden in the Berdaya Agent product build.
+# Mirrors ``apps/desktop/src/lib/desktop-hidden-providers.ts``.
+BERDAYA_HIDDEN_PROVIDER_IDS = frozenset({"nous"})
+
+
+def is_berdaya_hidden_provider(provider_id: str | None) -> bool:
+    """Return True when the Berdaya distribution must not surface this provider."""
+    return (provider_id or "").strip().lower() in BERDAYA_HIDDEN_PROVIDER_IDS
+
+
+def get_agent_install_dir(home: Path | None = None) -> Path:
+    """Return the agent checkout path under Berdaya home.
+
+    Prefers ``berdaya-agent``; falls back to legacy ``hermes-agent`` when that
+    is the only existing checkout (pre-rename installs).
+    """
+    base = Path(home) if home is not None else get_hermes_home()
+    preferred = base / AGENT_INSTALL_DIR_NAME
+    legacy = base / LEGACY_AGENT_INSTALL_DIR_NAME
+    if preferred.is_dir() or preferred.is_file():
+        return preferred
+    if legacy.is_dir() or legacy.is_file():
+        return legacy
+    return preferred
+
+
+def migrate_agent_install_dir(home: Path | None = None) -> Path:
+    """Rename legacy ``hermes-agent`` → ``berdaya-agent`` when safe."""
+    base = Path(home) if home is not None else get_hermes_home()
+    preferred = base / AGENT_INSTALL_DIR_NAME
+    legacy = base / LEGACY_AGENT_INSTALL_DIR_NAME
+    if preferred.exists():
+        return preferred
+    if legacy.exists():
+        try:
+            legacy.rename(preferred)
+        except OSError:
+            return legacy
+        return preferred
+    return preferred

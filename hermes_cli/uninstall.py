@@ -321,14 +321,18 @@ def uninstall_gateway_service():
 
 def _hermes_path_markers(hermes_home: Path) -> list[str]:
     """Path-entry substrings that identify Berdaya-owned User-PATH entries."""
+    from hermes_constants import AGENT_INSTALL_DIR_NAME, LEGACY_AGENT_INSTALL_DIR_NAME
+
     root = str(hermes_home).rstrip("\\/")
     # Match on prefix so sub-entries (git\cmd, git\bin, git\usr\bin, node, etc.)
-    # all get swept.  Also match the bare hermes-agent install dir.
-    markers = [root + "\\hermes-agent", root + "\\git", root + "\\node", root + "\\venv"]
-    # Also match if HERMES_HOME was customised to somewhere else — find-and-nuke
-    # any entry whose path component contains "hermes".  We don't want to catch
-    # unrelated entries like "chermes-foo" or "ephermeral", so we look for
-    # backslash-hermes as a word-ish boundary.
+    # all get swept.  Also match the bare agent checkout dir (current + legacy).
+    markers = [
+        root + "\\" + AGENT_INSTALL_DIR_NAME,
+        root + "\\" + LEGACY_AGENT_INSTALL_DIR_NAME,
+        root + "\\git",
+        root + "\\node",
+        root + "\\venv",
+    ]
     return markers
 
 
@@ -532,8 +536,10 @@ def run_gui_uninstall(args):
         print(f"  • {summary['userdata_dir']}  (desktop app data)")
     print()
     if agent_is_installed(hermes_home):
+        from hermes_constants import get_agent_install_dir
+
         print(color("Kept intact:", Colors.GREEN, Colors.BOLD))
-        print(f"  • The Berdaya Agent agent at {hermes_home / 'hermes-agent'}")
+        print(f"  • The Berdaya Agent agent at {get_agent_install_dir(hermes_home)}")
         print(f"  • Your config, sessions, and secrets under {hermes_home}")
         print()
 
@@ -805,7 +811,7 @@ def _perform_uninstall(
     # We need to be careful here
     try:
         if project_root.exists():
-            # If the install is inside ~/.hermes/, just remove the hermes-agent subdir
+            # If the install is inside Berdaya home, remove the checkout subdir.
             if hermes_home in project_root.parents or project_root.parent == hermes_home:
                 shutil.rmtree(project_root)
                 log_success(f"Removed {project_root}")

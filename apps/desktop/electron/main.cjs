@@ -16,7 +16,7 @@ const {
   shell,
   systemPreferences
 } = require('electron')
-const crypto = require('node:crypto')
+const { resolveAgentInstallRoot } = require('./agent-install-path.cjs')
 const fs = require('node:fs')
 const http = require('node:http')
 const https = require('node:https')
@@ -249,7 +249,7 @@ const HERMES_HOME = resolveHermesHome()
 // ACTIVE_HERMES_ROOT — the canonical mutable Berdaya Agent install. Same path
 // install.ps1 / install.sh use, so a desktop-only user and a CLI-only user end
 // up with identical layouts and can share one install.
-const ACTIVE_HERMES_ROOT = path.join(HERMES_HOME, 'hermes-agent')
+const ACTIVE_HERMES_ROOT = resolveAgentInstallRoot(HERMES_HOME)
 // VENV_ROOT — venv lives inside the repo, exactly like install.ps1 does it.
 const VENV_ROOT = path.join(ACTIVE_HERMES_ROOT, 'venv')
 // BOOTSTRAP_COMPLETE_MARKER — written by the first-launch bootstrap runner
@@ -2176,7 +2176,7 @@ function resolveHermesBackend(dashboardArgs) {
   }
 
   // 3. Bootstrap-complete ACTIVE_HERMES_ROOT -- the canonical install at
-  //    %LOCALAPPDATA%\hermes\hermes-agent (Windows) or ~/.hermes/hermes-agent.
+  //    %LOCALAPPDATA%\berdaya\berdaya-agent (Windows) or ~/.berdaya/berdaya-agent.
   //    The bootstrap marker means install.ps1 stages finished and the user
   //    completed initial configuration; we trust the install and go straight
   //    to spawning hermes. Updates flow through the in-app update path
@@ -2255,7 +2255,7 @@ function resolveHermesBackend(dashboardArgs) {
     // backend hands the spawn step a guaranteed ModuleNotFoundError.
     // Verify the import works before trusting the candidate; on
     // failure, fall through to step 6 so the bootstrap runner pulls
-    // a uv-managed 3.11 into %LOCALAPPDATA%\hermes\hermes-agent\venv.
+    // a uv-managed 3.11 into %LOCALAPPDATA%\berdaya\berdaya-agent\venv.
     if (canImportHermesCli(python)) {
       return {
         kind: 'python',

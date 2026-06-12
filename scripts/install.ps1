@@ -30,7 +30,7 @@ param(
     # (left behind by an old upstream Hermes install) must NOT hijack Berdaya
     # into the foreign hermes folder — the two apps stay fully separate.
     [string]$BerdayaHome = $(if ($env:BERDAYA_HOME) { $env:BERDAYA_HOME } else { "$env:LOCALAPPDATA\berdaya" }),
-    [string]$InstallDir = $(if ($env:BERDAYA_HOME) { "$env:BERDAYA_HOME\hermes-agent" } else { "$env:LOCALAPPDATA\berdaya\hermes-agent" }),
+    [string]$InstallDir = $(if ($env:BERDAYA_HOME) { "$env:BERDAYA_HOME\berdaya-agent" } else { "$env:LOCALAPPDATA\berdaya\berdaya-agent" }),
 
     # --- Stage protocol (additive; default invocation behaves as before) ----
     # See the "Stage protocol" section near the bottom of the file for the
@@ -98,7 +98,7 @@ try {
 # Configuration
 # ============================================================================
 
-$RepoUrlSsh = "git@github.com:NousResearch/hermes-agent.git"
+$RepoUrlSsh = "git@github.com:adrinant/berdaya-agent.git"
 $RepoUrlHttps = "https://github.com/adrinant/berdaya-agent.git"
 $PythonVersion = "3.11"
 $NodeVersion = "22"
@@ -1102,7 +1102,21 @@ function Install-SystemPackages {
 # Installation
 # ============================================================================
 
+function Migrate-LegacyInstallDir {
+    param(
+        [string]$BerdayaHomeRoot,
+        [string]$TargetInstallDir
+    )
+    $legacy = Join-Path $BerdayaHomeRoot 'hermes-agent'
+    if ((Test-Path $TargetInstallDir) -or -not (Test-Path $legacy)) {
+        return
+    }
+    Write-Info "Migrating install folder hermes-agent -> berdaya-agent..."
+    Move-Item -LiteralPath $legacy -Destination $TargetInstallDir
+}
+
 function Install-Repository {
+    Migrate-LegacyInstallDir -BerdayaHomeRoot $BerdayaHome -TargetInstallDir $InstallDir
     Write-Info "Installing to $InstallDir..."
 
     $didUpdate = $false
@@ -2681,7 +2695,7 @@ function Write-Completion {
     Write-Host "   Data:      " -NoNewline -ForegroundColor Yellow
     Write-Host "$BerdayaHome\cron\, sessions\, logs\"
     Write-Host "   Code:      " -NoNewline -ForegroundColor Yellow
-    Write-Host "$BerdayaHome\hermes-agent\"
+    Write-Host "$BerdayaHome\berdaya-agent\"
     Write-Host ""
     
     Write-Host "---------------------------------------------------------" -ForegroundColor Cyan

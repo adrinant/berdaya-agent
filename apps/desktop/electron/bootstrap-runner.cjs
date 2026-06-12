@@ -39,6 +39,7 @@ const fsp = require('node:fs/promises')
 const path = require('node:path')
 const https = require('node:https')
 const { spawn } = require('node:child_process')
+const { resolveAgentInstallRoot } = require('./agent-install-path.cjs')
 
 const IS_WINDOWS = process.platform === 'win32'
 
@@ -85,19 +86,21 @@ function bootstrapCacheDir(hermesHome) {
   return path.join(hermesHome, 'bootstrap-cache')
 }
 
-// The install.sh / install.ps1 that ships inside the already-installed agent
-// checkout under ~/.hermes/hermes-agent. Used as a last-resort fallback when
-// the pinned commit can't be fetched from GitHub (e.g. a locally-built desktop
-// app stamped to an unpushed HEAD).
+// The install.sh / install.ps1 inside the installed agent checkout under
+// ~/.berdaya/berdaya-agent (legacy: hermes-agent). Last-resort fallback when
+// the pinned commit can't be fetched from GitHub.
 function installedAgentInstallScript(hermesHome) {
   if (!hermesHome) return null
-  const candidate = path.join(hermesHome, 'hermes-agent', 'scripts', installScriptName())
-  try {
-    fs.accessSync(candidate, fs.constants.R_OK)
-    return candidate
-  } catch {
-    return null
+  for (const subdir of ['berdaya-agent', 'hermes-agent']) {
+    const candidate = path.join(hermesHome, subdir, 'scripts', installScriptName())
+    try {
+      fs.accessSync(candidate, fs.constants.R_OK)
+      return candidate
+    } catch {
+      // try next
+    }
   }
+  return null
 }
 
 function cachedScriptPath(hermesHome, commit) {

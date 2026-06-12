@@ -112,6 +112,19 @@ The agent’s self-description comes from **SOUL.md** and a built-in fallback in
 - Bootstrap installer identifier: `com.berdayaai.agent.setup`
 - Raw GitHub URLs: `adrinant/berdaya-agent`
 
+### Code checkout directory (under data home)
+
+| Before | After |
+|--------|-------|
+| `%LOCALAPPDATA%\berdaya\hermes-agent` | **`%LOCALAPPDATA%\berdaya\berdaya-agent`** |
+| `~/.berdaya/hermes-agent` | **`~/.berdaya/berdaya-agent`** |
+
+Fresh installs clone into **`berdaya-agent`**. Existing **`hermes-agent`** folders are migrated automatically by `install.ps1` / `install.sh` (rename when safe). Desktop and Python resolve the checkout via `get_agent_install_dir()` / `resolveAgentInstallRoot()` — prefer `berdaya-agent`, fall back to legacy.
+
+**Note:** The pip package name remains `hermes-agent` internally; only the on-disk checkout folder was renamed.
+
+**Files:** `hermes_constants.py`, `scripts/install.ps1`, `scripts/install.sh`, `apps/desktop/electron/agent-install-path.cjs`, `apps/bootstrap-installer/src-tauri/src/paths.rs`
+
 ---
 
 ## 7. Brand assets and tooling

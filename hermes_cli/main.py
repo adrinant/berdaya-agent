@@ -2735,6 +2735,7 @@ def select_provider_and_model(args=None):
         group_providers,
         provider_group_for_slug,
     )
+    from hermes_constants import is_berdaya_hidden_provider
 
     provider_labels = dict(_PROVIDER_LABELS)  # derive from canonical list
     if active and active in _custom_provider_map:
@@ -2755,7 +2756,10 @@ def select_provider_and_model(args=None):
     # resolves back to a concrete slug, so the dispatch chain below is
     # unchanged. Custom providers and the trailing actions stay flat.
     canonical_descs = {p.slug: p.tui_desc for p in CANONICAL_PROVIDERS}
-    grouped_rows = group_providers([p.slug for p in CANONICAL_PROVIDERS])
+    visible_slugs = [
+        p.slug for p in CANONICAL_PROVIDERS if not is_berdaya_hidden_provider(p.slug)
+    ]
+    grouped_rows = group_providers(visible_slugs)
 
     # The group/slug that should be pre-selected: the active provider's group
     # if it's grouped, otherwise the active slug itself.
@@ -2850,6 +2854,10 @@ def select_provider_and_model(args=None):
     if selected_provider == "openrouter":
         _model_flow_openrouter(config, current_model)
     elif selected_provider == "nous":
+        if is_berdaya_hidden_provider("nous"):
+            print("Nous Portal is not available in Berdaya Agent.")
+            print("Choose OpenRouter, Anthropic, or another provider instead.")
+            return
         _model_flow_nous(config, current_model, args=args)
     elif selected_provider == "openai-codex":
         _model_flow_openai_codex(config, current_model)

@@ -176,6 +176,12 @@ def _cmd_login(args) -> int:
     commands stay in lockstep: device-code login, pick a Nous model, switch the
     inference provider to Nous, then offer the Tool Gateway opt-in.
     """
+    from hermes_constants import is_berdaya_hidden_provider
+
+    if is_berdaya_hidden_provider("nous"):
+        print("Nous Portal is not available in Berdaya Agent.")
+        print("Run `berdaya setup model` to configure OpenRouter, Anthropic, or another provider.")
+        return 1
     from hermes_cli.setup import _run_portal_one_shot
 
     config = load_config() or {}

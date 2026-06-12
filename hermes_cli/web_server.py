@@ -4731,7 +4731,11 @@ async def list_oauth_providers():
           has_refresh_token bool
     """
     providers = []
+    from hermes_constants import is_berdaya_hidden_provider
+
     for p in _OAUTH_PROVIDER_CATALOG:
+        if is_berdaya_hidden_provider(p["id"]):
+            continue
         status = _resolve_provider_status(p["id"], p.get("status_fn"))
         providers.append({
             "id": p["id"],
@@ -5697,6 +5701,13 @@ def _codex_full_login_worker(session_id: str) -> None:
 async def start_oauth_login(provider_id: str, request: Request):
     """Initiate an OAuth login flow. Token-protected."""
     _require_token(request)
+    from hermes_constants import is_berdaya_hidden_provider
+
+    if is_berdaya_hidden_provider(provider_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Nous Portal is not available in Berdaya Agent.",
+        )
     _gc_oauth_sessions()
     valid = {p["id"] for p in _OAUTH_PROVIDER_CATALOG}
     if provider_id not in valid:

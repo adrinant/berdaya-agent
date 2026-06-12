@@ -30,6 +30,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import List, Optional
 
+from hermes_constants import _ROOT_INSTALL_DIR_NAMES
 from agent.skill_utils import is_excluded_skill_path
 
 _PROFILE_ID_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
@@ -81,7 +82,7 @@ _CLONE_ALL_STRIP: list[str] = [
 # user data from a named-profile source.
 #
 # Rationale per item:
-#   hermes-agent  — git repo checkout (~84 MB source + ~3 GB venv)
+#   berdaya-agent / hermes-agent — git repo checkout (~84 MB source + ~3 GB venv)
 #   .worktrees    — git worktrees
 #   profiles      — sibling named profiles (recursive copy never intended)
 #   bin           — installed binaries (tirith etc., ~10 MB) shared per-host
@@ -91,8 +92,7 @@ _CLONE_ALL_STRIP: list[str] = [
 # exclusion list (export drops state.db / logs / caches too because the
 # archive is a portable snapshot; clone-all keeps those because the cloned
 # profile is meant to keep working immediately).
-_CLONE_ALL_DEFAULT_EXCLUDE_ROOT: frozenset[str] = frozenset({
-    "hermes-agent",
+_CLONE_ALL_DEFAULT_EXCLUDE_ROOT: frozenset[str] = _ROOT_INSTALL_DIR_NAMES | frozenset({
     ".worktrees",
     "profiles",
     "bin",
@@ -167,9 +167,8 @@ def _clone_all_copytree_ignore(source_dir: Path):
 # The default profile contains infrastructure (repo checkout, worktrees, DBs,
 # caches, binaries) that named profiles don't have.  We exclude those so the
 # export is a portable, reasonable-size archive of actual profile data.
-_DEFAULT_EXPORT_EXCLUDE_ROOT = frozenset({
+_DEFAULT_EXPORT_EXCLUDE_ROOT = _ROOT_INSTALL_DIR_NAMES | frozenset({
     # Infrastructure
-    "hermes-agent",         # repo checkout (multi-GB)
     ".worktrees",           # git worktrees
     "profiles",             # other profiles — never recursive-export
     "bin",                  # installed binaries (tirith, etc.)

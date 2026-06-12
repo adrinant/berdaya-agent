@@ -131,6 +131,13 @@ def _model_flow_openrouter(config, current_model=""):
 
 def _model_flow_nous(config, current_model="", args=None):
     """Nous Portal provider: ensure logged in, then pick model."""
+    from hermes_constants import is_berdaya_hidden_provider
+
+    if is_berdaya_hidden_provider("nous"):
+        print("Nous Portal is not available in Berdaya Agent.")
+        print("Run `berdaya model` and choose OpenRouter, Anthropic, or another provider.")
+        return
+
     from hermes_cli.auth import (
         get_provider_auth_state,
         _prompt_model_selection,

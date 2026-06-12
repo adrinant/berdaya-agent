@@ -855,12 +855,16 @@ def _run_post_setup(post_setup_key: str):
             if result.returncode == 0:
                 _print_success("    Node.js dependencies installed")
             else:
-                from hermes_constants import display_hermes_home
-                _print_warning(f"    npm install failed - run manually: cd {display_hermes_home()}/hermes-agent && npm install --workspaces=false")
+                from hermes_constants import display_hermes_home, AGENT_INSTALL_DIR_NAME
+                _print_warning(
+                    f"    npm install failed - run manually: "
+                    f"cd {display_hermes_home()}/{AGENT_INSTALL_DIR_NAME} "
+                    f"&& npm install --workspaces=false"
+                )
                 if result.stderr:
                     _print_info(f"      {result.stderr.strip()[:200]}")
         elif not node_modules.exists():
-            _print_warning("    Node.js not found - browser tools require: npm install (in hermes-agent directory)")
+            _print_warning("    Node.js not found - browser tools require: npm install (in berdaya-agent directory)")
             return
 
         # Step 2: only the local browser provider actually needs Chromium on
@@ -2052,7 +2056,11 @@ def _visible_providers(
         and acct.tool_gateway_entitled
     )
     visible = []
+    from hermes_constants import is_berdaya_hidden_provider
+
     for provider in cat.get("providers", []):
+        if provider.get("managed_nous_feature") and is_berdaya_hidden_provider("nous"):
+            continue
         # Nous-managed Tool Gateway rows stay visible regardless of auth —
         # selecting one drives an inline Portal login. A `requires_nous_auth`
         # row that is NOT a managed gateway feature (pure pre-auth UX) is

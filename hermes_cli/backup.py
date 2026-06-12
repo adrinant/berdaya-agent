@@ -35,7 +35,8 @@ logger = logging.getLogger(__name__)
 # so that skill directories like ``skills/autonomous-ai-agents/hermes-agent/``
 # are not accidentally excluded.
 _EXCLUDED_DIRS = {
-    "hermes-agent",     # the codebase repo — re-clone instead
+    "berdaya-agent",    # the codebase repo — re-clone instead
+    "hermes-agent",     # legacy checkout dir name
     "__pycache__",      # bytecode caches — regenerated on import
     ".git",             # nested git dirs (profiles shouldn't have these, but safety)
     "node_modules",     # js deps if website/ somehow leaks in
@@ -75,10 +76,9 @@ def _should_exclude(rel_path: Path) -> bool:
     for part in parts:
         if part not in _EXCLUDED_DIRS:
             continue
-        # ``hermes-agent`` only matches at the root level (first component).
-        # Nested directories with the same name — e.g.
-        # ``skills/autonomous-ai-agents/hermes-agent/`` — must be preserved.
-        if part == "hermes-agent" and part != parts[0]:
+        # Root-level checkout dirs only; nested skill folders with the same
+        # name must be preserved.
+        if part in ("berdaya-agent", "hermes-agent") and part != parts[0]:
             continue
         return True
 
@@ -191,7 +191,7 @@ def run_backup(args) -> None:
         orig_dirnames = dirnames[:]
         dirnames[:] = [
             d for d in dirnames
-            if d not in _EXCLUDED_DIRS or (d == "hermes-agent" and not is_root)
+            if d not in _EXCLUDED_DIRS or (d in ("berdaya-agent", "hermes-agent") and not is_root)
         ]
         for removed in set(orig_dirnames) - set(dirnames):
             skipped_dirs.add(str(rel_dir / removed))
@@ -476,8 +476,10 @@ def run_import(args) -> None:
 
         # Guidance
         print()
-        if not (hermes_root / "hermes-agent").is_dir():
-            print("Note: The hermes-agent codebase was not included in the backup.")
+        from hermes_constants import get_agent_install_dir
+
+        if not get_agent_install_dir(hermes_root).is_dir():
+            print("Note: The Berdaya Agent codebase was not included in the backup.")
             print("  If this is a fresh install, run: hermes update")
 
         if restored_profiles:

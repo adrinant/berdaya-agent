@@ -163,6 +163,13 @@ def _format_exhausted_status(entry) -> str:
 
 def auth_add_command(args) -> None:
     provider = _normalize_provider(getattr(args, "provider", ""))
+    from hermes_constants import is_berdaya_hidden_provider
+
+    if is_berdaya_hidden_provider(provider):
+        raise SystemExit(
+            "Nous Portal is not available in Berdaya Agent. "
+            "Use `berdaya auth add openrouter` or another provider with your API key."
+        )
     if provider not in PROVIDER_REGISTRY and provider != "openrouter" and not provider.startswith(CUSTOM_POOL_PREFIX):
         raise SystemExit(f"Unknown provider: {provider}")
 

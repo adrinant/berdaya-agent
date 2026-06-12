@@ -232,7 +232,8 @@ def _augment_path_with_known_tools() -> None:
         # Berdaya Agent venv Scripts directory — host of the hermes.exe shim itself,
         # also where any pip-installed console scripts land.  Usually already
         # on PATH when the user invokes hermes, but harmless to include.
-        os.path.join(local_appdata, "hermes", "hermes-agent", "venv", "Scripts"),
+        os.path.join(local_appdata, "berdaya", "berdaya-agent", "venv", "Scripts"),
+        os.path.join(local_appdata, "berdaya", "hermes-agent", "venv", "Scripts"),
         # WinGet packages directory — where ``winget install`` drops CLI
         # shims by default (ripgrep lands here as rg.exe).  Covers the case
         # of a system-Git install + ripgrep-via-winget that isn't yet on

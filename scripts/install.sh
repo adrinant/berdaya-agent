@@ -181,19 +181,19 @@ while [[ $# -gt 0 ]]; do
             echo "  --non-interactive  Skip stages that require user input"
             echo "  --include-desktop  Also build the desktop app (apps/desktop -> Berdaya Agent.app)"
             echo "  --dir PATH     Installation directory"
-            echo "                   default (non-root):  ~/.hermes/hermes-agent"
-            echo "                   default (root, Linux): /usr/local/lib/hermes-agent"
+            echo "                   default (non-root):  ~/.berdaya/berdaya-agent"
+            echo "                   default (root, Linux): /usr/local/lib/berdaya-agent"
             echo "  --hermes-home PATH  Data directory (default: ~/.hermes, or \$HERMES_HOME)"
             echo "  -h, --help     Show this help"
             echo ""
             echo "Notes:"
             echo "  When running as root on Linux, Berdaya Agent installs the code under"
-            echo "  /usr/local/lib/hermes-agent and links the command into"
-            echo "  /usr/local/bin/hermes (FHS layout — matches Claude Code / Codex CLI)."
-            echo "  Data, config, sessions, and logs still live in \$HERMES_HOME"
-            echo "  (default /root/.hermes).  This keeps Docker bind-mounted volumes"
+            echo "  /usr/local/lib/berdaya-agent and links the command into"
+            echo "  /usr/local/bin/berdaya (FHS layout — matches Claude Code / Codex CLI)."
+            echo "  Data, config, sessions, and logs still live in \$BERDAYA_HOME"
+            echo "  (default ~/.berdaya).  This keeps Docker bind-mounted volumes"
             echo "  small and ensures the command is on PATH for all shells."
-            echo "  Existing installs at \$HERMES_HOME/hermes-agent are preserved in-place."
+            echo "  Legacy installs at \$BERDAYA_HOME/hermes-agent are migrated to berdaya-agent."
             echo "  --ensure DEPS  Install only specified deps (comma-separated)"
             echo "                   Supported: node, browser, ripgrep, ffmpeg"
             echo "                   Does NOT clone repo or create venv"
@@ -343,18 +343,31 @@ is_termux() {
     [ -n "${TERMUX_VERSION:-}" ] || [[ "${PREFIX:-}" == *"com.termux/files/usr"* ]]
 }
 
+# Rename legacy checkout folder under HERMES_HOME when upgrading from pre-rename installs.
+migrate_install_dir() {
+    local preferred="$HERMES_HOME/berdaya-agent"
+    local legacy="$HERMES_HOME/hermes-agent"
+    if [ -e "$preferred" ]; then
+        return 0
+    fi
+    if [ -e "$legacy" ]; then
+        log_info "Migrating install folder hermes-agent -> berdaya-agent..."
+        mv "$legacy" "$preferred"
+    fi
+}
+
 # Decide where the repo checkout + venv live, and where the `hermes` command
 # symlink goes.  Called after detect_os so $OS/$DISTRO are known.
 #
 # Defaults:
-#   - Non-root, any OS:       INSTALL_DIR = $HERMES_HOME/hermes-agent
+#   - Non-root, any OS:       INSTALL_DIR = $HERMES_HOME/berdaya-agent
 #                             command link in $HOME/.local/bin
-#   - Termux (any uid):       INSTALL_DIR = $HERMES_HOME/hermes-agent
+#   - Termux (any uid):       INSTALL_DIR = $HERMES_HOME/berdaya-agent
 #                             command link in $PREFIX/bin (already on PATH)
-#   - Root on Linux (new):    INSTALL_DIR = /usr/local/lib/hermes-agent
+#   - Root on Linux (new):    INSTALL_DIR = /usr/local/lib/berdaya-agent
 #                             command link in /usr/local/bin
 #                             (unless a legacy install already exists at
-#                              $HERMES_HOME/hermes-agent — then preserve it)
+#                              $HERMES_HOME/hermes-agent or berdaya-agent)
 #
 # Always no-op when the user set --dir or $HERMES_INSTALL_DIR.
 resolve_install_layout() {
@@ -363,23 +376,40 @@ resolve_install_layout() {
         return 0
     fi
 
+    migrate_install_dir
+
     # Termux: package manager manages /data/data/..., keep code in HERMES_HOME.
     if is_termux; then
-        INSTALL_DIR="$HERMES_HOME/hermes-agent"
+        INSTALL_DIR="$HERMES_HOME/berdaya-agent"
         return 0
     fi
 
     # Root on Linux: prefer FHS layout unless a legacy install already exists.
-    # macOS root installs keep the legacy layout because /usr/local/ on macOS
+    # macOS root installs keep the user-scoped layout because /usr/local/ on macOS
     # is Homebrew territory and we don't want to fight that.
     if [ "$OS" = "linux" ] && [ "$(id -u)" -eq 0 ]; then
-        if [ -d "$HERMES_HOME/hermes-agent/.git" ]; then
-            INSTALL_DIR="$HERMES_HOME/hermes-agent"
-            log_info "Existing install detected at $INSTALL_DIR — keeping legacy layout"
-            log_info "  (new root installs use /usr/local/lib/hermes-agent)"
+        if [ -d "$HERMES_HOME/berdaya-agent/.git" ]; then
+            INSTALL_DIR="$HERMES_HOME/berdaya-agent"
+            log_info "Existing install detected at $INSTALL_DIR — keeping user-scoped layout"
             return 0
         fi
-        INSTALL_DIR="/usr/local/lib/hermes-agent"
+        if [ -d "$HERMES_HOME/hermes-agent/.git" ]; then
+            INSTALL_DIR="$HERMES_HOME/hermes-agent"
+            log_info "Existing legacy install detected at $INSTALL_DIR — keeping layout"
+            log_info "  (new root installs use /usr/local/lib/berdaya-agent)"
+            return 0
+        fi
+        if [ -d "/usr/local/lib/berdaya-agent/.git" ]; then
+            INSTALL_DIR="/usr/local/lib/berdaya-agent"
+            log_info "Existing install detected at $INSTALL_DIR"
+            return 0
+        fi
+        if [ -d "/usr/local/lib/hermes-agent/.git" ]; then
+            INSTALL_DIR="/usr/local/lib/hermes-agent"
+            log_info "Existing legacy install detected at $INSTALL_DIR"
+            return 0
+        fi
+        INSTALL_DIR="/usr/local/lib/berdaya-agent"
         ROOT_FHS_LAYOUT=true
         # Place uv-managed Python under /usr/local/share so the venv interpreter
         # is world-readable.  Default uv paths land in /root/.local/share/uv,
@@ -396,8 +426,8 @@ resolve_install_layout() {
         return 0
     fi
 
-    # Default: non-root, non-Termux → legacy user-scoped layout.
-    INSTALL_DIR="$HERMES_HOME/hermes-agent"
+    # Default: non-root, non-Termux → user-scoped layout under HERMES_HOME.
+    INSTALL_DIR="$HERMES_HOME/berdaya-agent"
 }
 
 get_command_link_dir() {
@@ -1973,6 +2003,7 @@ run_setup_wizard() {
 
     echo ""
     log_info "Starting setup wizard..."
+    log_info "Berdaya Agent does not use Nous Portal — pick OpenRouter, Anthropic, or another provider."
     echo ""
 
     cd "$INSTALL_DIR"

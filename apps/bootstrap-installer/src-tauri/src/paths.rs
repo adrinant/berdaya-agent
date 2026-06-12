@@ -1,16 +1,9 @@
 //! Filesystem paths + logging setup.
 //!
 //! Mirrors `hermes_constants.get_hermes_home()` from the Python CLI:
-//!   Windows: %LOCALAPPDATA%\hermes
-//!   macOS:   ~/.hermes
-//!   Linux:   ~/.hermes  (override via $HERMES_HOME)
-//!
-//! NOTE (macOS): Python's get_hermes_home(), scripts/install.sh, and the
-//! Electron desktop's resolveHermesHome() ALL use ~/.hermes on macOS — there
-//! is no ~/Library/Application Support branch anywhere else. An earlier
-//! version of this file used Application Support, which drifted from every
-//! other component: the installer wrote the install to one dir and the
-//! desktop looked for it in another, so first launch never found the backend.
+//!   Windows: %LOCALAPPDATA%\berdaya
+//!   macOS:   ~/.berdaya
+//!   Linux:   ~/.berdaya  (override via $BERDAYA_HOME / $HERMES_HOME)
 //!
 //! IMPORTANT: this must match exactly. Drift here means install.ps1
 //! writes to one place and the installer reads from another, breaking
@@ -21,8 +14,16 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use tracing_appender::non_blocking::WorkerGuard;
 
-/// Returns the canonical Berdaya Agent home directory, respecting $HERMES_HOME if set.
+pub const PREFERRED_INSTALL_DIR: &str = "berdaya-agent";
+pub const LEGACY_INSTALL_DIR: &str = "hermes-agent";
+
+/// Returns the canonical Berdaya Agent home directory.
 pub fn hermes_home() -> PathBuf {
+    if let Ok(override_path) = std::env::var("BERDAYA_HOME") {
+        if !override_path.trim().is_empty() {
+            return PathBuf::from(override_path);
+        }
+    }
     if let Ok(override_path) = std::env::var("HERMES_HOME") {
         if !override_path.trim().is_empty() {
             return PathBuf::from(override_path);
@@ -31,21 +32,30 @@ pub fn hermes_home() -> PathBuf {
 
     #[cfg(target_os = "windows")]
     {
-        // %LOCALAPPDATA%\hermes — matches scripts/install.ps1's $BerdayaHome.
         if let Some(local_app_data) = dirs::data_local_dir() {
-            return local_app_data.join("hermes");
+            return local_app_data.join("berdaya");
         }
     }
 
-    // macOS + Linux + fallback: ~/.hermes (matches Python get_hermes_home(),
-    // install.sh, and the Electron desktop's resolveHermesHome()).
     if let Some(home) = dirs::home_dir() {
-        return home.join(".hermes");
+        return home.join(".berdaya");
     }
 
-    // Last resort — current dir, almost certainly wrong but at least
-    // doesn't panic.
-    PathBuf::from(".hermes")
+    PathBuf::from(".berdaya")
+}
+
+/// Git checkout + venv under Berdaya home (berdaya-agent, legacy hermes-agent).
+pub fn agent_install_dir() -> PathBuf {
+    let home = hermes_home();
+    let preferred = home.join(PREFERRED_INSTALL_DIR);
+    let legacy = home.join(LEGACY_INSTALL_DIR);
+    if preferred.is_dir() {
+        return preferred;
+    }
+    if legacy.is_dir() {
+        return legacy;
+    }
+    preferred
 }
 
 pub fn log_dir() -> PathBuf {
@@ -61,13 +71,6 @@ pub fn bootstrap_cache_dir() -> PathBuf {
 }
 
 /// Stable location the installer copies itself to after a successful install.
-/// The desktop app re-invokes this with `--update`, and the start-menu /
-/// desktop shortcuts can point users back to it. Lives directly under
-/// HERMES_HOME so it survives repo checkout deletion (unlike anything under
-/// hermes-agent/).
-///
-/// On Windows this is `%LOCALAPPDATA%\hermes\hermes-setup.exe`; on other
-/// platforms the extension differs but the directory is the same.
 pub fn installer_dest() -> PathBuf {
     let name = if cfg!(target_os = "windows") {
         "hermes-setup.exe"
@@ -77,21 +80,11 @@ pub fn installer_dest() -> PathBuf {
     hermes_home().join(name)
 }
 
-/// Copy the currently-running installer binary to `installer_dest()` so it's
-/// available for future `--update` runs and shortcut launches.
-///
-/// No-ops (returns Ok) when the running exe is ALREADY the destination — which
-/// is exactly the case during an `--update` run (the desktop launched us FROM
-/// that path), where copying onto ourselves would be a Windows sharing
-/// violation. Best-effort: a failure here must not fail the install, so the
-/// caller logs and continues.
+/// Copy the currently-running installer binary to `installer_dest()`.
 pub fn copy_self_to_hermes_home() -> std::io::Result<()> {
     let src = std::env::current_exe()?;
     let dest = installer_dest();
 
-    // Skip if we're already running from the destination (update re-invocation
-    // or a prior copy). canonicalize both so symlinks / 8.3 short paths / case
-    // differences don't trick us into a self-copy.
     let same = match (src.canonicalize(), dest.canonicalize()) {
         (Ok(a), Ok(b)) => a == b,
         _ => src == dest,
@@ -112,9 +105,6 @@ pub fn copy_self_to_hermes_home() -> std::io::Result<()> {
 
 #[cfg(target_os = "macos")]
 fn repair_macos_installer_helper(path: &Path) {
-    // The staged helper may inherit quarantine from the downloaded installer.
-    // Desktop later launches this exact file for in-app updates, so make it
-    // executable before the update handoff reaches LaunchServices/Gatekeeper.
     let _ = Command::new("/usr/bin/xattr")
         .args(["-cr"])
         .arg(path)
@@ -136,23 +126,13 @@ fn repair_macos_installer_helper(path: &Path) {
 #[cfg(not(target_os = "macos"))]
 fn repair_macos_installer_helper(_path: &Path) {}
 
-/// Where install.ps1 writes the bootstrap-complete marker (existence-only file
-/// the Electron app also checks). Per main.cjs:
-///   const BOOTSTRAP_COMPLETE_MARKER = path.join(ACTIVE_HERMES_ROOT, '.hermes-bootstrap-complete')
-/// We don't always know ACTIVE_HERMES_ROOT until install.ps1 reports it, so
-/// this is a probe helper, not a definitive path.
 pub fn likely_bootstrap_marker(install_root: &Path) -> PathBuf {
     install_root.join(".hermes-bootstrap-complete")
 }
 
-/// Initializes tracing to bootstrap-installer.log under HERMES_HOME/logs/.
-/// Returns a guard that flushes the appender on drop — keep it alive for
-/// the lifetime of the process.
 pub fn init_logging() -> Option<WorkerGuard> {
     let dir = log_dir();
     if let Err(err) = std::fs::create_dir_all(&dir) {
-        // No log dir → log to stderr only. Don't panic; the installer
-        // should still be usable on an exotic filesystem.
         eprintln!("[hermes-setup] could not create log dir {dir:?}: {err}");
         return None;
     }
@@ -172,10 +152,6 @@ pub fn init_logging() -> Option<WorkerGuard> {
 
     Some(guard)
 }
-
-// ---------------------------------------------------------------------------
-// Tauri commands
-// ---------------------------------------------------------------------------
 
 #[tauri::command]
 pub fn get_log_path() -> String {

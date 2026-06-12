@@ -7,10 +7,14 @@ import pytest
 
 import hermes_constants
 from hermes_constants import (
+    AGENT_INSTALL_DIR_NAME,
+    LEGACY_AGENT_INSTALL_DIR_NAME,
     VALID_REASONING_EFFORTS,
+    get_agent_install_dir,
     get_default_hermes_root,
     get_hermes_home,
     is_container,
+    migrate_agent_install_dir,
     parse_reasoning_effort,
     secure_parent_dir,
 )
@@ -311,4 +315,53 @@ class TestSecureParentDir:
         secure_parent_dir(link_target)
         assert len(called_with) == 1
         assert called_with[0] == (str(real_dir), 0o700)
+
+
+class TestAgentInstallDir:
+    def test_defaults_to_berdaya_agent(self, tmp_path):
+        home = tmp_path / ".berdaya"
+        home.mkdir()
+        assert get_agent_install_dir(home).name == AGENT_INSTALL_DIR_NAME
+
+    def test_prefers_berdaya_over_legacy(self, tmp_path):
+        home = tmp_path / ".berdaya"
+        (home / LEGACY_AGENT_INSTALL_DIR_NAME).mkdir()
+        (home / AGENT_INSTALL_DIR_NAME).mkdir()
+        assert get_agent_install_dir(home).name == AGENT_INSTALL_DIR_NAME
+
+    def test_falls_back_to_legacy(self, tmp_path):
+        home = tmp_path / ".berdaya"
+        (home / LEGACY_AGENT_INSTALL_DIR_NAME).mkdir()
+        assert get_agent_install_dir(home).name == LEGACY_AGENT_INSTALL_DIR_NAME
+
+    def test_migrate_renames_legacy(self, tmp_path):
+        home = tmp_path / ".berdaya"
+        legacy = home / LEGACY_AGENT_INSTALL_DIR_NAME
+        legacy.mkdir()
+        (legacy / "README.md").write_text("ok")
+        result = migrate_agent_install_dir(home)
+        assert result.name == AGENT_INSTALL_DIR_NAME
+        assert result.is_dir()
+        assert not legacy.exists()
+        assert (result / "README.md").read_text() == "ok"
+
+    def test_migrate_noop_when_preferred_exists(self, tmp_path):
+        home = tmp_path / ".berdaya"
+        preferred = home / AGENT_INSTALL_DIR_NAME
+        preferred.mkdir()
+        legacy = home / LEGACY_AGENT_INSTALL_DIR_NAME
+        legacy.mkdir()
+        result = migrate_agent_install_dir(home)
+        assert result == preferred
+        assert legacy.exists()
+
+
+class TestBerdayaHiddenProviders:
+    def test_nous_hidden(self):
+        from hermes_constants import is_berdaya_hidden_provider
+
+        assert is_berdaya_hidden_provider("nous") is True
+        assert is_berdaya_hidden_provider("NOUS") is True
+        assert is_berdaya_hidden_provider("openrouter") is False
+        assert is_berdaya_hidden_provider("") is False
 
