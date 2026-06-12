@@ -1,5 +1,7 @@
 import { JsonRpcGatewayClient } from '@hermes/shared'
 
+import { filterDesktopModelOptions, filterDesktopOAuthProviders } from '@/lib/desktop-hidden-providers'
+
 import type {
   ActionResponse,
   ActionStatusResponse,
@@ -112,6 +114,20 @@ export class HermesGateway extends JsonRpcGatewayClient {
       createRequestId: nextId => nextId,
       notConnectedErrorMessage: 'Berdaya Agent gateway is not connected',
       requestTimeoutMs: DEFAULT_GATEWAY_REQUEST_TIMEOUT_MS
+    })
+  }
+
+  request<T>(
+    method: string,
+    params: Record<string, unknown> = {},
+    timeoutMs = DEFAULT_GATEWAY_REQUEST_TIMEOUT_MS
+  ): Promise<T> {
+    return super.request<T>(method, params, timeoutMs).then(result => {
+      if (method === 'model.options') {
+        return filterDesktopModelOptions(result as ModelOptionsResponse) as T
+      }
+
+      return result
     })
   }
 }
@@ -372,10 +388,15 @@ export function revealEnvVar(key: string): Promise<{ key: string; value: string 
 }
 
 export function listOAuthProviders(): Promise<OAuthProvidersResponse> {
-  return window.hermesDesktop.api<OAuthProvidersResponse>({
-    ...profileScoped(),
-    path: '/api/providers/oauth'
-  })
+  return window.hermesDesktop
+    .api<OAuthProvidersResponse>({
+      ...profileScoped(),
+      path: '/api/providers/oauth'
+    })
+    .then(response => ({
+      ...response,
+      providers: filterDesktopOAuthProviders(response.providers ?? [])
+    }))
 }
 
 export function startOAuthLogin(providerId: string): Promise<OAuthStartResponse> {
@@ -619,10 +640,12 @@ export function getUsageAnalytics(days = 30): Promise<AnalyticsResponse> {
 }
 
 export function getGlobalModelOptions(): Promise<ModelOptionsResponse> {
-  return window.hermesDesktop.api<ModelOptionsResponse>({
-    ...profileScoped(),
-    path: '/api/model/options'
-  })
+  return window.hermesDesktop
+    .api<ModelOptionsResponse>({
+      ...profileScoped(),
+      path: '/api/model/options'
+    })
+    .then(filterDesktopModelOptions)
 }
 
 export interface RecommendedDefaultModel {

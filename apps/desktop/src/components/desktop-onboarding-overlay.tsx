@@ -20,6 +20,7 @@ import {
   Loader2,
   Terminal
 } from '@/lib/icons'
+import { filterDesktopOAuthProviders } from '@/lib/desktop-hidden-providers'
 import { isProviderSetupErrorMessage } from '@/lib/provider-setup-errors'
 import { cn } from '@/lib/utils'
 import { $desktopBoot, type DesktopBootState } from '@/store/boot'
@@ -182,13 +183,10 @@ const assetPath = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/
 const providerTitle = (p: OAuthProvider) => PROVIDER_DISPLAY[p.id]?.title ?? p.name
 const orderOf = (p: OAuthProvider) => PROVIDER_DISPLAY[p.id]?.order ?? 99
 
-// Providers the backend may advertise but the desktop app does not offer.
-const HIDDEN_PROVIDER_IDS = new Set(['nous'])
-
 export const sortProviders = (providers: OAuthProvider[]) =>
-  providers
-    .filter(p => !HIDDEN_PROVIDER_IDS.has(p.id))
-    .sort((a, b) => orderOf(a) - orderOf(b) || a.name.localeCompare(b.name))
+  filterDesktopOAuthProviders(providers).sort(
+    (a, b) => orderOf(a) - orderOf(b) || a.name.localeCompare(b.name)
+  )
 
 // Exit choreography, mirroring the gateway "connecting" overlay's timing:
 // text-out (360ms: CONNECTED fades down, rest scrambles+fades) → hold (300ms)

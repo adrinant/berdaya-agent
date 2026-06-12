@@ -745,11 +745,22 @@ def _secure_file(path):
 
 def _ensure_default_soul_md(home: Path) -> None:
     """Seed a default SOUL.md into HERMES_HOME if the user doesn't have one yet."""
+    from hermes_cli.default_soul import LEGACY_DEFAULT_SOUL_MD
+
     soul_path = home / "SOUL.md"
-    if soul_path.exists():
+    if not soul_path.exists():
+        soul_path.write_text(DEFAULT_SOUL_MD, encoding="utf-8")
+        _secure_file(soul_path)
         return
-    soul_path.write_text(DEFAULT_SOUL_MD, encoding="utf-8")
-    _secure_file(soul_path)
+
+    try:
+        content = soul_path.read_text(encoding="utf-8")
+    except OSError:
+        return
+
+    if content.strip() == LEGACY_DEFAULT_SOUL_MD.strip():
+        soul_path.write_text(DEFAULT_SOUL_MD, encoding="utf-8")
+        _secure_file(soul_path)
 
 
 def ensure_hermes_home():
