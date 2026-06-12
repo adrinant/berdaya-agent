@@ -18,6 +18,7 @@ const {
 } = require('electron')
 const { resolveAgentInstallRoot } = require('./agent-install-path.cjs')
 const fs = require('node:fs')
+const crypto = require('node:crypto')
 const http = require('node:http')
 const https = require('node:https')
 const net = require('node:net')
